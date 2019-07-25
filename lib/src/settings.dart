@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'theme.dart';
 import 'user_data.dart';
 import 'widgets/custom_cross_fade.dart';
@@ -66,9 +67,10 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                               ),
                               Text(
                                 _fullName,
-                                style: Theme.of(context).textTheme.body2.copyWith(
-                                  color: Colors.white,
-                                ),
+                                style:
+                                    Theme.of(context).textTheme.body2.copyWith(
+                                          color: Colors.white,
+                                        ),
                               ),
                               const SizedBox(
                                 height: 2,
@@ -86,7 +88,9 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                           duration: const Duration(milliseconds: 200),
                           height: 1,
                           width: double.infinity,
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.transparent,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white12
+                              : Colors.transparent,
                         ),
                         const SizedBox(
                           height: 8,
@@ -94,7 +98,22 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                         ListTile(
                           leading: Icon(Icons.account_box),
                           title: Text('Attendance History'),
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (context) {
+                              return Scaffold(
+                                appBar: AppBar(
+                                  title: Text('Attendance History'),
+                                ),
+                                body: WebView(
+                                  javascriptMode: JavascriptMode.unrestricted,
+                                  initialUrl:
+                                      'https://itap.ml/app/viewattendance/?token=${userDataNotifier.userKey}',
+                                ),
+                              );
+                            }));
+                          },
                         ),
                         ListTile(
                           leading: Icon(Icons.exit_to_app),
@@ -109,13 +128,28 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                   : const SizedBox.shrink(),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(8, 8, 8, MediaQuery.of(context).padding.bottom + 8),
+              padding: EdgeInsets.fromLTRB(
+                  8, 8, 8, MediaQuery.of(context).padding.bottom + 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   IconButton(
                     icon: Icon(Icons.info),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) {
+                        return Scaffold(
+                          appBar: AppBar(
+                            title: Text('About iTap'),
+                          ),
+                          body: WebView(
+                            javascriptMode: JavascriptMode.unrestricted,
+                            initialUrl: 'https://itap.ml/app/about/?v=2.0',
+                          ),
+                        );
+                      }));
+                    },
                   ),
                   IconButton(
                     icon: CustomCrossFade(

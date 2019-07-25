@@ -7,6 +7,8 @@ import 'group_actions.dart';
 import 'group_data.dart';
 import 'user_data.dart';
 import 'widgets/custom_cross_fade.dart';
+import 'widgets/custom_dialog.dart';
+import 'widgets/no_internet.dart';
 
 class GroupPage extends StatefulWidget {
   const GroupPage({Key key}) : super(key: key);
@@ -20,7 +22,7 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
   GroupDetails _groupDetails;
   bool loading = false;
 
-  void getGroupDetails([bool lifecycleChange = false]) {
+  void getGroupDetails([bool lifecycleChange = false, bool error = false]) {
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
     final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
     if (userDataNotifier?.userKey == null ||
@@ -44,6 +46,9 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
       'group': convertGroupName(groupDataNotifier.selectedGroup),
     }).then((response) {
       if (response.statusCode == 200) {
+        if (error) {
+          Provider.of<InternetAvailibility>(context).removeSnackbar(context);
+        }
         timer?.cancel();
         final Map<String, dynamic> parsedJson = jsonDecode(response.body);
         final newGroupDetails = GroupDetails.fromJson(parsedJson);
@@ -55,10 +60,18 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
           print(_groupDetails);
         });
       } else {
-        // Die
+        print('Error ${response.statusCode} while getting group details');
       }
     }).catchError((e) {
-      // Something
+      print('Error while getting group details: $e');
+      if (!error) {
+        Provider.of<InternetAvailibility>(context)
+            .showNoInternetSnackBar(context);
+      }
+      // Get group details again if there is an error
+      Future.delayed(const Duration(milliseconds: 500), () {
+        getGroupDetails(true, true);
+      });
     });
   }
 
@@ -113,50 +126,7 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
     final topBarHeight = 80; // hardcoded
     final present = _groupDetails?.checkTakenToday == 0;
     return CustomCrossFade(
-      //crossShrink: _groupDetails == null,
       child: _groupDetails == null
-          // ? ConstrainedBox(
-          //     constraints: BoxConstraints(
-          //       minHeight: windowHeight - topPadding - topBarHeight,
-          //     ),
-          //     child: Column(
-          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //       children: <Widget>[
-          //         SizedBox(),
-          //         AnimatedPlaceholder(
-          //           height: 128,
-          //           width: 192,
-          //         ),
-          //         Column(
-          //           children: <Widget>[
-          //             AnimatedPlaceholder(
-          //               height: 48,
-          //               width: 128,
-          //             ),
-          //             Padding(
-          //               padding: const EdgeInsets.all(8.0),
-          //               child: Wrap(
-          //                 spacing: 8,
-          //                 runSpacing: 8,
-          //                 children: <Widget>[
-          //                   for (int i = 0; i < 4; i++)
-          //                     AnimatedPlaceholder(
-          //                       height:
-          //                           (MediaQuery.of(context).size.width - 24) /
-          //                               2 *
-          //                               0.8,
-          //                       width:
-          //                           (MediaQuery.of(context).size.width - 24) /
-          //                               2,
-          //                     ),
-          //                 ],
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       ],
-          //     ),
-          //   )
           ? Container(
               constraints: BoxConstraints(
                 minHeight: windowHeight - topPadding - topBarHeight,
@@ -174,6 +144,7 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
                 minHeight: windowHeight - topPadding - topBarHeight,
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   SizedBox(),
@@ -184,6 +155,7 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
                   if (present)
                     GroupTimings(
                       groupDetails: _groupDetails,
+                      getGroupDetails: getGroupDetails,
                     ),
                   GroupActions(
                     groupDetails: _groupDetails,
@@ -226,7 +198,84 @@ class GroupStatus extends StatelessWidget {
 
 class GroupTimings extends StatelessWidget {
   final GroupDetails groupDetails;
-  const GroupTimings({Key key, @required this.groupDetails}) : super(key: key);
+  final VoidCallback getGroupDetails;
+  const GroupTimings({
+    Key key,
+    @required this.groupDetails,
+    @required this.getGroupDetails,
+  }) : super(key: key);
+
+  void showRemarksDialog(BuildContext context, bool isCheckOut) async {
+    final remarks = await showCustomDialog<String>(
+      context: context,
+      dialog: AddRemarksDialog(
+        groupDetails: groupDetails,
+        isCheckOut: isCheckOut,
+      ),
+    );
+    if (remarks == null) return;
+    addRemarks(context, isCheckOut, remarks);
+  }
+
+  void addRemarks(
+    BuildContext context,
+    bool isCheckOut,
+    String remarks, [
+    bool error = false,
+  ]) async {
+    if (!isCheckOut && groupDetails.remarks == remarks ||
+        isCheckOut && groupDetails.remarksCheckout == remarks) return;
+    try {
+      final userDataNotifier = Provider.of<UserDataNotifier>(context);
+      final response = await http.post('https://itap.ml/app/index.php', body: {
+        'userkey': userDataNotifier.userKey,
+        'action': 'addRemarks',
+        'org': userDataNotifier.org,
+        'group': convertGroupName(groupDetails.groupName),
+        'username': userDataNotifier.username,
+        (isCheckOut ? 'remarks_checkout' : 'remarks'): remarks,
+      });
+      if (response.statusCode == 200) {
+        if (error) {
+          Provider.of<InternetAvailibility>(context).removeSnackbar(context);
+        }
+        final Map<String, dynamic> parsedJson = jsonDecode(response.body);
+        if (parsedJson['success'] == 1) {
+          print('Check ${isCheckOut ? 'out' : 'in'} remarks added: $remarks');
+          getGroupDetails();
+        } else {
+          showCustomDialog(
+            context: context,
+            dialog: AlertDialog(
+              title: Text('Error'),
+              content: Text(parsedJson['error_message']),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        print(
+            'Error ${response.statusCode} while adding check ${isCheckOut ? 'out' : 'in'} remarks');
+      }
+    } catch (e) {
+      print(
+          'Error while adding check ${isCheckOut ? 'out' : 'in'} remarks: $e');
+      if (!error) {
+        Provider.of<InternetAvailibility>(context)
+            .showNoInternetSnackBar(context);
+      }
+      Future.delayed(const Duration(milliseconds: 500), () {
+        addRemarks(context, isCheckOut, remarks, true);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +285,7 @@ class GroupTimings extends StatelessWidget {
         Column(
           children: <Widget>[
             Text(
-              groupDetails.checkIn == '' ? '–' : groupDetails.checkIn,
+              groupDetails.checkIn,
               style: Theme.of(context).textTheme.display1,
             ),
             Text('Checked in'),
@@ -244,8 +293,15 @@ class GroupTimings extends StatelessWidget {
               height: 28,
               child: IconButton(
                 iconSize: 20,
-                icon: const Icon(Icons.comment),
-                onPressed: () {},
+                icon: groupDetails.remarks == ''
+                    ? const Icon(Icons.add_comment)
+                    : const Icon(Icons.comment),
+                tooltip: groupDetails.remarks == ''
+                    ? 'Add check in remarks'
+                    : 'Edit check in remarks',
+                onPressed: () {
+                  showRemarksDialog(context, false);
+                },
               ),
             ),
             const SizedBox(
@@ -262,16 +318,93 @@ class GroupTimings extends StatelessWidget {
             Text('Checked out'),
             SizedBox(
               height: 28,
-              child: IconButton(
-                iconSize: 20,
-                icon: const Icon(Icons.comment),
-                onPressed: () {},
-              ),
+              child: groupDetails.checkOut == ''
+                  ? null
+                  : IconButton(
+                      iconSize: 20,
+                      icon: groupDetails.remarksCheckout == ''
+                          ? const Icon(Icons.add_comment)
+                          : const Icon(Icons.comment),
+                      tooltip: groupDetails.remarks == ''
+                          ? 'Add check out remarks'
+                          : 'Edit check out remarks',
+                      onPressed: () {
+                        showRemarksDialog(context, true);
+                      },
+                    ),
             ),
             const SizedBox(
               height: 8,
             ),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+class AddRemarksDialog extends StatefulWidget {
+  final GroupDetails groupDetails;
+  final bool isCheckOut;
+  const AddRemarksDialog({
+    Key key,
+    @required this.groupDetails,
+    @required this.isCheckOut,
+  }) : super(key: key);
+
+  @override
+  _AddRemarksDialogState createState() => _AddRemarksDialogState();
+}
+
+class _AddRemarksDialogState extends State<AddRemarksDialog> {
+  TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(
+      text: widget.isCheckOut
+          ? widget.groupDetails.remarksCheckout
+          : widget.groupDetails.remarks,
+    );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+          '${widget.isCheckOut ? 'Check Out Remarks' : 'Check In Remarks'} for ${widget.groupDetails.groupName}'),
+      content: TextField(
+        controller: _textController,
+        maxLines: null,
+        autofocus: true,
+        decoration: InputDecoration(
+          labelText:
+              widget.isCheckOut ? 'Check out remarks' : 'Check in remarks',
+        ),
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) {
+          Navigator.pop(context, _textController.text);
+        },
+      ),
+      actions: <Widget>[
+        FlatButton(
+          child: Text('CANCEL'),
+          onPressed: () {
+            Navigator.pop(context, null);
+          },
+        ),
+        FlatButton(
+          child: Text('OK'),
+          onPressed: () {
+            Navigator.pop(context, _textController.text);
+          },
         ),
       ],
     );

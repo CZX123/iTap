@@ -6,6 +6,7 @@ import 'user_data.dart';
 import 'widgets/app_logo.dart';
 import 'widgets/custom_cross_fade.dart';
 import 'widgets/custom_dialog.dart';
+import 'widgets/no_internet.dart';
 
 enum FormType { login, reset }
 
@@ -31,7 +32,8 @@ class _LoginPageState extends State<LoginPage> {
           24,
         ),
         constraints: BoxConstraints(
-          minHeight: MediaQuery.of(context).size.height,
+          minHeight: MediaQuery.of(context).size.height -
+              MediaQuery.of(context).viewInsets.bottom,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -77,7 +79,7 @@ class _LoginFormState extends State<LoginForm> {
   String _username;
   String _password;
 
-  void _submitForm() {
+  void _submitForm([bool error = false]) {
     FormState state = _formKey.currentState;
     if (state.validate()) {
       state.save();
@@ -90,6 +92,10 @@ class _LoginFormState extends State<LoginForm> {
           'password': _password,
         }).then((response) {
           if (response.statusCode == 200) {
+            if (error) {
+              Provider.of<InternetAvailibility>(context)
+                  .removeSnackbar(context);
+            }
             final Map<String, dynamic> userData = jsonDecode(response.body);
             print('Login Details: $userData');
             final int success = userData['success'];
@@ -117,10 +123,20 @@ class _LoginFormState extends State<LoginForm> {
                 _org,
               );
             } // if success == 2
+          } else {
+            print('Error ${response.statusCode} while logging in');
           }
         });
       } catch (e) {
-        // handle errors
+        print('Error while logging in: $e');
+        if (!error) {
+          Provider.of<InternetAvailibility>(context)
+              .showNoInternetSnackBar(context);
+        }
+        // Login again if there is an error
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _submitForm(true);
+        });
       }
     } else
       setState(() {
@@ -254,7 +270,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
   String _org;
   String _username;
 
-  void _submitForm() {
+  void _submitForm([bool error = false]) {
     print('yay?');
     FormState state = _formKey.currentState;
     if (state.validate()) {
@@ -267,6 +283,10 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
           'username': _username,
         }).then((response) {
           if (response.statusCode == 200) {
+            if (error) {
+              Provider.of<InternetAvailibility>(context)
+                  .removeSnackbar(context);
+            }
             final Map<String, dynamic> userData = jsonDecode(response.body);
             print('Reset Password Details: $userData');
             final int success = userData['success'];
@@ -303,9 +323,21 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
                 ),
               );
             }
+          } else {
+            print('Error ${response.statusCode} while resetting password');
           }
         });
-      } catch (e) {}
+      } catch (e) {
+        print('Error while resetting password: $e');
+        if (!error) {
+          Provider.of<InternetAvailibility>(context)
+              .showNoInternetSnackBar(context);
+        }
+        // Reset password again if there is an error
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _submitForm(true);
+        });
+      }
     } else
       setState(() {
         _validate = true;

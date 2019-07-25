@@ -6,22 +6,25 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'group_data.dart';
 import 'user_data.dart';
 import 'widgets/custom_cross_fade.dart';
+import 'widgets/no_internet.dart';
 
 class GenerateCodePage extends StatefulWidget {
   final GroupDetails groupDetails;
-  const GenerateCodePage({Key key, @required this.groupDetails}) : super(key: key);
+  const GenerateCodePage({Key key, @required this.groupDetails})
+      : super(key: key);
 
   _GenerateCodePageState createState() => _GenerateCodePageState();
 }
 
 class _GenerateCodePageState extends State<GenerateCodePage>
     with SingleTickerProviderStateMixin {
+  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   AnimationController _animationController;
   final _codeNotifier = ValueNotifier<String>(null);
   String _nextCode;
   int _interval;
 
-  void getCode() async {
+  void getCode([bool error = false]) async {
     try {
       final userDataNotifier = Provider.of<UserDataNotifier>(context);
       final response = await http.post('https://itap.ml/app/index.php', body: {
@@ -32,6 +35,10 @@ class _GenerateCodePageState extends State<GenerateCodePage>
         'username': userDataNotifier.username,
       });
       if (response.statusCode == 200) {
+        if (error) {
+          Provider.of<InternetAvailibility>(context)
+              .removeSnackbar(context, _scaffoldKey.currentState);
+        }
         Map<String, dynamic> parsedJson = jsonDecode(response.body);
         final details = GenerateCodeDetails.fromJson(parsedJson);
         print(details);
@@ -49,10 +56,17 @@ class _GenerateCodePageState extends State<GenerateCodePage>
           );
         }
       } else {
-        print('No Internet!');
+        print('Error ${response.statusCode} while generating code');
       }
     } catch (e) {
-      print(e);
+      print('Error while generating code: $e');
+      if (!error) {
+        Provider.of<InternetAvailibility>(context)
+            .showNoInternetSnackBar(context, _scaffoldKey.currentState);
+      }
+      Future.delayed(const Duration(milliseconds: 500), () {
+        getCode(true);
+      });
     }
   }
 
@@ -91,6 +105,7 @@ class _GenerateCodePageState extends State<GenerateCodePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
             'Code for ${Provider.of<GroupDataNotifier>(context).selectedGroup}'),

@@ -8,6 +8,7 @@ import 'user_data.dart';
 import 'widgets/animated_placeholder.dart';
 import 'widgets/app_logo.dart';
 import 'widgets/custom_cross_fade.dart';
+import 'widgets/no_internet.dart';
 
 class AttendancePage extends StatefulWidget {
   const AttendancePage({Key key}) : super(key: key);
@@ -18,7 +19,7 @@ class AttendancePage extends StatefulWidget {
 
 class _AttendancePageState extends State<AttendancePage>
     with WidgetsBindingObserver {
-  void getGroups() {
+  void getGroups([bool error = false]) {
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
     if (userDataNotifier?.userKey == null) return;
     http.post('https://itap.ml/app/index.php', body: {
@@ -29,6 +30,9 @@ class _AttendancePageState extends State<AttendancePage>
       'method': 'flutter',
     }).then((response) {
       if (response.statusCode == 200) {
+        if (error) {
+          Provider.of<InternetAvailibility>(context).removeSnackbar(context);
+        }
         final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
         final groupList = List<String>.from(jsonDecode(response.body));
         groupDataNotifier.groupList = groupList;
@@ -38,10 +42,18 @@ class _AttendancePageState extends State<AttendancePage>
           groupDataNotifier.selectedGroup = groupList[0];
         }
       } else {
-        // Die
+        print('Error ${response.statusCode} while getting groups');
       }
     }).catchError((e) {
-      // Something
+      print('Error while getting groups: $e');
+      if (!error) {
+        Provider.of<InternetAvailibility>(context)
+            .showNoInternetSnackBar(context);
+      }
+      // Get groups again if there is an error
+      Future.delayed(const Duration(milliseconds: 500), () {
+        getGroups(true);
+      });
     });
   }
 

@@ -12,7 +12,9 @@ class CustomCrossFade extends StatelessWidget {
   }) : super(key: key);
 
   static Widget layoutBuilder(
-      Widget currentChild, List<Widget> previousChildren) {
+    Widget currentChild,
+    List<Widget> previousChildren,
+  ) {
     Widget element = IgnorePointer(
       child: Stack(
         children: previousChildren,
@@ -21,6 +23,7 @@ class CustomCrossFade extends StatelessWidget {
     );
     if (currentChild != null)
       element = Stack(
+        fit: StackFit.passthrough,
         children: <Widget>[
           Positioned.fill(
             child: element,

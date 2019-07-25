@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'generate_code.dart';
 import 'group_data.dart';
 import 'theme.dart';
 import 'user_data.dart';
+import 'widgets/no_internet.dart';
 import 'wifi.dart';
 import 'widgets/custom_dialog.dart';
 
@@ -21,7 +23,7 @@ class GroupActions extends StatelessWidget {
   }) : super(key: key);
 
   bool verifyWifi(BuildContext context) {
-    final networkDetails = Provider.of<NetworkDetails>(context);
+    final networkDetails = Provider.of<NetworkDetails>(context, listen: false);
     // The logic here may be confusing, but it works.
     // Everything here is just a negation of the original logic.
     return !groupDetails.wifiList.every((wifiDetails) {
@@ -35,8 +37,9 @@ class GroupActions extends StatelessWidget {
   void takeAttendance(
     BuildContext context,
     bool takenWithWifi,
-    String code,
-  ) async {
+    String code, [
+    bool error = false,
+  ]) async {
     bool wifiIsLegit = false;
     if (takenWithWifi) wifiIsLegit = verifyWifi(context);
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
@@ -73,39 +76,55 @@ class GroupActions extends StatelessWidget {
           return;
         }
       }
-      final response = await http.post('https://itap.ml/app/index.php', body: {
-        'userkey': userDataNotifier.userKey,
-        'action': 'takeAttendance',
-        'org': userDataNotifier.org,
-        'group': convertGroupName(groupDetails.groupName),
-        'username': userDataNotifier.username,
-        'code': code,
-        'checkOut': groupDetails.checkTakenToday == 0 ? 'true' : 'false',
-      });
-      if (response.statusCode == 200) {
-        print('Response: ${response.body}');
-        final Map<String, dynamic> parsedJson = jsonDecode(response.body);
-        if (parsedJson['success'] == 1) {
-          getGroupDetails();
+      try {
+        final response =
+            await http.post('https://itap.ml/app/index.php', body: {
+          'userkey': userDataNotifier.userKey,
+          'action': 'takeAttendance',
+          'org': userDataNotifier.org,
+          'group': convertGroupName(groupDetails.groupName),
+          'username': userDataNotifier.username,
+          'code': code,
+          'checkOut': groupDetails.checkTakenToday == 0 ? 'true' : 'false',
+        });
+        if (response.statusCode == 200) {
+          if (error) {
+            Provider.of<InternetAvailibility>(context).removeSnackbar(context);
+          }
+          print('Response: ${response.body}');
+          final Map<String, dynamic> parsedJson = jsonDecode(response.body);
+          if (parsedJson['success'] == 1) {
+            getGroupDetails();
+          } else {
+            showCustomDialog(
+              context: context,
+              dialog: AlertDialog(
+                title: Text('Error'),
+                content: Text(parsedJson['error_message']),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            );
+          }
         } else {
-          showCustomDialog<bool>(
-            context: context,
-            dialog: AlertDialog(
-              title: Text('Error'),
-              content: Text(parsedJson['error_message']),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text('OK'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
-          );
+          print('Error ${response.statusCode} while taking attendance');
         }
-      } else {
-        print('Error ${response.statusCode}!');
+      } catch (e) {
+        print('Error while taking attendance: $e');
+        if (!error) {
+          Provider.of<InternetAvailibility>(context)
+              .showNoInternetSnackBar(context);
+        }
+        // Take attendance again if there is an error
+        Future.delayed(const Duration(milliseconds: 500), () {
+          takeAttendance(context, takenWithWifi, code, true);
+        });
       }
     } else if (takenWithWifi && !wifiIsLegit) {
       showCustomDialog(
@@ -174,6 +193,26 @@ class GroupActions extends StatelessWidget {
       takeAttendance(context, true, '');
     }
 
+    void wifiLongPress() {
+      final networkDetails =
+          Provider.of<NetworkDetails>(context, listen: false);
+      showCustomDialog(
+        context: context,
+        dialog: AlertDialog(
+          title: Text('Debug'),
+          content: Text('MAC address: ${networkDetails.mac}'),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
     void generateCode() {
       Navigator.push(
         context,
@@ -197,20 +236,18 @@ class GroupActions extends StatelessWidget {
             onPressed: scanCode,
           ),
         ]);
-        lastChild = ScanCodeButton(
-          fullWidth: true,
-          onPressed: scanCode,
-        );
       }
       if (groupDetails.wifiEnabled == 1) {
         children.add(
           MarkWithWifiButton(
             onPressed: markWithWifi,
+            onLongPress: wifiLongPress,
           ),
         );
         lastChild = MarkWithWifiButton(
           fullWidth: true,
           onPressed: markWithWifi,
+          onLongPress: wifiLongPress,
         );
       }
     }
@@ -229,11 +266,6 @@ class GroupActions extends StatelessWidget {
       children.removeLast();
       children.add(lastChild);
     }
-    if (children.length == 0) {
-      children.add(const SizedBox(
-        height: 24,
-      ));
-    }
     lastChild = null;
 
     return Column(
@@ -247,6 +279,10 @@ class GroupActions extends StatelessWidget {
             spacing: 8,
             children: children,
           ),
+        ),
+        SizedBox(
+          height:
+              children.length == 0 ? 32 : MediaQuery.of(context).padding.bottom,
         ),
       ],
     );
@@ -263,7 +299,6 @@ class TypeCodeDialog extends StatefulWidget {
 }
 
 class _TypeCodeDialogState extends State<TypeCodeDialog> {
-  final _textController = TextEditingController();
   bool _autovalidate = false;
   String _errorText;
   String code;
@@ -282,12 +317,6 @@ class _TypeCodeDialogState extends State<TypeCodeDialog> {
         _errorText = null;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
   }
 
   @override
@@ -383,10 +412,12 @@ class ScanCodeButton extends StatelessWidget {
 class MarkWithWifiButton extends StatelessWidget {
   final bool fullWidth;
   final VoidCallback onPressed;
+  final VoidCallback onLongPress;
   const MarkWithWifiButton({
     Key key,
     this.fullWidth = false,
     @required this.onPressed,
+    this.onLongPress,
   }) : super(key: key);
 
   @override
@@ -399,6 +430,7 @@ class MarkWithWifiButton extends StatelessWidget {
       iconData: Icons.wifi,
       text: 'Mark with WiFi',
       onPressed: onPressed,
+      onLongPress: onLongPress,
       fullWidth: fullWidth,
     );
   }
@@ -435,6 +467,7 @@ class GroupButton extends ImplicitlyAnimatedWidget {
   final String text;
   final IconData iconData;
   final VoidCallback onPressed;
+  final VoidCallback onLongPress;
   final bool fullWidth;
 
   const GroupButton({
@@ -447,6 +480,7 @@ class GroupButton extends ImplicitlyAnimatedWidget {
     @required this.text,
     @required this.iconData,
     @required this.onPressed,
+    this.onLongPress,
     this.fullWidth = false,
   }) : super(
           duration: duration,
@@ -474,6 +508,7 @@ class _GroupButtonState extends AnimatedWidgetBaseState<GroupButton> {
 
   @override
   Widget build(BuildContext context) {
+    Timer timer;
     var buttonWidth = (MediaQuery.of(context).size.width - 24) / 2;
     if (buttonWidth < 0) {
       buttonWidth = 100; // Reasonable value
@@ -482,63 +517,97 @@ class _GroupButtonState extends AnimatedWidgetBaseState<GroupButton> {
       buttonWidth = buttonWidth * 2 + 8;
     }
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return RaisedButton(
-      padding: EdgeInsets.zero,
-      elevation: 0,
-      hoverElevation: isDark ? 6 : 3,
-      highlightElevation: isDark ? 12 : 6,
-      focusElevation: isDark ? 12 : 6,
-      color: _backgroundColorTween.evaluate(animation),
-      highlightColor: _splashColorTween.evaluate(animation),
-      splashColor: _splashColorTween.evaluate(animation),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTapDown: widget.onLongPress != null
+          ? (_) {
+              timer = Timer(const Duration(seconds: 1), () {
+                widget.onLongPress();
+              });
+            }
+          : null,
+      onTapUp: widget.onLongPress != null
+          ? (_) {
+              if (timer != null) {
+                timer.cancel();
+                timer = null;
+              }
+            }
+          : null,
+      onTapCancel: widget.onLongPress != null
+          ? () {
+              if (timer != null) {
+                timer.cancel();
+                timer = null;
+              }
+            }
+          : null,
+      onForcePressPeak: widget.onLongPress != null
+          ? (_) {
+              if (timer != null) {
+                timer.cancel();
+                timer = null;
+              }
+              widget.onLongPress();
+            }
+          : null,
+      child: RaisedButton(
+        padding: EdgeInsets.zero,
+        elevation: 0,
+        hoverElevation: isDark ? 6 : 3,
+        highlightElevation: isDark ? 12 : 6,
+        focusElevation: isDark ? 12 : 6,
+        color: _backgroundColorTween.evaluate(animation),
+        highlightColor: _splashColorTween.evaluate(animation),
+        splashColor: _splashColorTween.evaluate(animation),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: SizedBox(
+          height: buttonWidth * (widget.fullWidth ? .25 : .8),
+          width: buttonWidth,
+          child: widget.fullWidth
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(
+                      widget.iconData,
+                      color: _textColorTween.evaluate(animation),
+                      size: 56,
+                    ),
+                    const SizedBox(
+                      width: 16,
+                    ),
+                    Text(
+                      widget.text,
+                      style: Theme.of(context).textTheme.body2.copyWith(
+                            fontSize: 16,
+                            color: _textColorTween.evaluate(animation),
+                          ),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    const SizedBox.shrink(),
+                    Icon(
+                      widget.iconData,
+                      color: _textColorTween.evaluate(animation),
+                      size: 56,
+                    ),
+                    Text(
+                      widget.text,
+                      style: Theme.of(context).textTheme.body2.copyWith(
+                            fontSize: 16,
+                            color: _textColorTween.evaluate(animation),
+                          ),
+                    ),
+                    const SizedBox.shrink(),
+                  ],
+                ),
+        ),
+        onPressed: widget.onPressed,
       ),
-      child: SizedBox(
-        height: buttonWidth * (widget.fullWidth ? .25 : .8),
-        width: buttonWidth,
-        child: widget.fullWidth
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Icon(
-                    widget.iconData,
-                    color: _textColorTween.evaluate(animation),
-                    size: 56,
-                  ),
-                  const SizedBox(
-                    width: 16,
-                  ),
-                  Text(
-                    widget.text,
-                    style: Theme.of(context).textTheme.body2.copyWith(
-                          fontSize: 16,
-                          color: _textColorTween.evaluate(animation),
-                        ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  const SizedBox.shrink(),
-                  Icon(
-                    widget.iconData,
-                    color: _textColorTween.evaluate(animation),
-                    size: 56,
-                  ),
-                  Text(
-                    widget.text,
-                    style: Theme.of(context).textTheme.body2.copyWith(
-                          fontSize: 16,
-                          color: _textColorTween.evaluate(animation),
-                        ),
-                  ),
-                  const SizedBox.shrink(),
-                ],
-              ),
-      ),
-      onPressed: widget.onPressed,
     );
   }
 }

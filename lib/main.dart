@@ -11,10 +11,8 @@ import 'src/settings.dart';
 import 'src/theme.dart';
 import 'src/user_data.dart';
 import 'src/widgets/custom_cross_fade.dart';
+import 'src/widgets/no_internet.dart';
 import 'src/wifi.dart';
-import 'package:http/http.dart' as http; // Remove when done testing
-import 'dart:convert'; // Remove when done testing
-import 'src/widgets/custom_dialog.dart'; // Remove when done testing
 
 void main() {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -38,6 +36,9 @@ class Main extends StatelessWidget {
           initialData: false,
           value: checkAndroid8(),
           catchError: (context, error) => false,
+        ),
+        Provider<InternetAvailibility>.value(
+          value: InternetAvailibility(),
         ),
         ChangeNotifierProvider(
           builder: (context) => UserDataNotifier(),
@@ -65,8 +66,11 @@ class Main extends StatelessWidget {
             return oldDetails != newDetails;
           },
         ),
-        ChangeNotifierProvider(
-          builder: (context) => NetworkNotifier(null),
+        ChangeNotifierProxyProvider<NetworkDetails, NetworkNotifier>(
+          builder: (context, details, notifier) {
+            if (notifier != null) notifier.value = details;
+            return NetworkNotifier(details);
+          },
         ),
         ProxyProvider2<NetworkDetails, NetworkNotifier, NetworkDetails>(
           builder: (context, streamDetails, notifier, newDetails) {
@@ -138,56 +142,10 @@ class _HomeState extends State<Home> {
 
     return Scaffold(
       drawer: Drawer(
-        child: userDataNotifier.checkData() ? SettingsDrawer() : null,
+        child: SettingsDrawer(),
       ),
       body: CustomCrossFade(
         child: child,
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.swap_vert),
-        onPressed: () {
-          if (userDataNotifier.checkData())
-            userDataNotifier.logout(context);
-          else {
-            http.post('https://itap.ml/app/index.php', body: {
-              'token': 'rQQYP51jI87DnteO',
-              'action': 'login',
-              'org': 'hci',
-              'username': 'kent',
-              'password': 'kent',
-            }).then((response) {
-              if (response.statusCode == 200) {
-                final Map<String, dynamic> userData = jsonDecode(response.body);
-                print('Login Details: $userData');
-                final int success = userData['success'];
-                if (success == 0) {
-                  showCustomDialog(
-                    context: context,
-                    dialog: AlertDialog(
-                      title: Text('Error'),
-                      content: Text(userData['error_message']),
-                      actions: <Widget>[
-                        FlatButton(
-                          child: Text('OK'),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        )
-                      ],
-                    ),
-                  );
-                } else if (success == 1) {
-                  Provider.of<UserDataNotifier>(context).updateData(
-                    userData['key'],
-                    'kent',
-                    userData['user'],
-                    'hci',
-                  );
-                }
-              }
-            });
-          }
-        },
       ),
     );
   }
