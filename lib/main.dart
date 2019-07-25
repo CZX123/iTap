@@ -20,6 +20,7 @@ void main() {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(Main());
 }
+
 class Main extends StatelessWidget {
   const Main({Key key}) : super(key: key);
   static const platform = const MethodChannel('com.irs.itap/androidVersion');
