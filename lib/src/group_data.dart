@@ -2,6 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+String convertGroupName(String value) {
+  return value.replaceAll(' ', '_').toLowerCase();
+}
+
 class GroupDataNotifier extends ChangeNotifier {
   List<String> _groupList;
   List<String> get groupList => _groupList;
@@ -12,14 +16,10 @@ class GroupDataNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _modifiedSelectedGroup;
-  String get modifiedSelectedGroup => _modifiedSelectedGroup;
-
   String _selectedGroup;
   String get selectedGroup => _selectedGroup;
   set selectedGroup(String selectedGroup) {
     _selectedGroup = selectedGroup;
-    _modifiedSelectedGroup = selectedGroup?.replaceAll(' ', '_')?.toLowerCase();
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('selectedGroup', selectedGroup);
     });
@@ -28,7 +28,6 @@ class GroupDataNotifier extends ChangeNotifier {
 
   void reset() {
     _selectedGroup = null;
-    _modifiedSelectedGroup = null;
     _groupList = null;
     SharedPreferences.getInstance().then((prefs) {
       prefs.remove('selectedGroup');

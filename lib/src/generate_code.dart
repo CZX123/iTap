@@ -8,7 +8,8 @@ import 'user_data.dart';
 import 'widgets/custom_cross_fade.dart';
 
 class GenerateCodePage extends StatefulWidget {
-  GenerateCodePage({Key key}) : super(key: key);
+  final GroupDetails groupDetails;
+  const GenerateCodePage({Key key, @required this.groupDetails}) : super(key: key);
 
   _GenerateCodePageState createState() => _GenerateCodePageState();
 }
@@ -23,12 +24,11 @@ class _GenerateCodePageState extends State<GenerateCodePage>
   void getCode() async {
     try {
       final userDataNotifier = Provider.of<UserDataNotifier>(context);
-      final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
       final response = await http.post('https://itap.ml/app/index.php', body: {
         'userkey': userDataNotifier.userKey,
         'action': 'getCode',
         'org': userDataNotifier.org,
-        'group': groupDataNotifier.modifiedSelectedGroup,
+        'group': convertGroupName(widget.groupDetails.groupName),
         'username': userDataNotifier.username,
       });
       if (response.statusCode == 200) {

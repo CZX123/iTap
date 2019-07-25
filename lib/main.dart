@@ -137,8 +137,8 @@ class _HomeState extends State<Home> {
       child = const LoginPage();
 
     return Scaffold(
-      drawer: const Drawer(
-        child: SettingsDrawer(),
+      drawer: Drawer(
+        child: userDataNotifier.checkData() ? SettingsDrawer() : null,
       ),
       body: CustomCrossFade(
         child: child,

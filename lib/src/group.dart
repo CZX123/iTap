@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -17,25 +18,39 @@ class GroupPage extends StatefulWidget {
 class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
   String _previousGroup;
   GroupDetails _groupDetails;
+  bool loading = false;
 
-  void getGroupDetails() {
+  void getGroupDetails([bool lifecycleChange = false]) {
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
     final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
     if (userDataNotifier?.userKey == null ||
         groupDataNotifier?.selectedGroup == null) return;
+    Timer timer;
+    if (!lifecycleChange) {
+      setState(() {
+        _groupDetails = null;
+      });
+      timer = Timer(const Duration(milliseconds: 800), () {
+        setState(() {
+          loading = true;
+        });
+      });
+    }
     http.post('https://itap.ml/app/index.php', body: {
       'userkey': userDataNotifier.userKey,
       'action': 'getGroupDetails',
       'org': userDataNotifier.org,
       'username': userDataNotifier.username,
-      'group': groupDataNotifier.modifiedSelectedGroup,
+      'group': convertGroupName(groupDataNotifier.selectedGroup),
     }).then((response) {
       if (response.statusCode == 200) {
+        timer?.cancel();
         final Map<String, dynamic> parsedJson = jsonDecode(response.body);
         final newGroupDetails = GroupDetails.fromJson(parsedJson);
         if (_groupDetails == newGroupDetails)
           return; // If data is equivalent, do not setState
         setState(() {
+          if (loading) loading = false;
           _groupDetails = newGroupDetails;
           print(_groupDetails);
         });
@@ -75,7 +90,7 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       if (_lastLifecyleState == AppLifecycleState.paused) {
-        getGroupDetails();
+        getGroupDetails(true);
       }
     }
     if (_lastLifecyleState == AppLifecycleState.paused &&
@@ -98,10 +113,59 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
     final topBarHeight = 80; // hardcoded
     final present = _groupDetails?.checkTakenToday == 0;
     return CustomCrossFade(
+      //crossShrink: _groupDetails == null,
       child: _groupDetails == null
-          ? ConstrainedBox(
+          // ? ConstrainedBox(
+          //     constraints: BoxConstraints(
+          //       minHeight: windowHeight - topPadding - topBarHeight,
+          //     ),
+          //     child: Column(
+          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //       children: <Widget>[
+          //         SizedBox(),
+          //         AnimatedPlaceholder(
+          //           height: 128,
+          //           width: 192,
+          //         ),
+          //         Column(
+          //           children: <Widget>[
+          //             AnimatedPlaceholder(
+          //               height: 48,
+          //               width: 128,
+          //             ),
+          //             Padding(
+          //               padding: const EdgeInsets.all(8.0),
+          //               child: Wrap(
+          //                 spacing: 8,
+          //                 runSpacing: 8,
+          //                 children: <Widget>[
+          //                   for (int i = 0; i < 4; i++)
+          //                     AnimatedPlaceholder(
+          //                       height:
+          //                           (MediaQuery.of(context).size.width - 24) /
+          //                               2 *
+          //                               0.8,
+          //                       width:
+          //                           (MediaQuery.of(context).size.width - 24) /
+          //                               2,
+          //                     ),
+          //                 ],
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ],
+          //     ),
+          //   )
+          ? Container(
               constraints: BoxConstraints(
                 minHeight: windowHeight - topPadding - topBarHeight,
+              ),
+              alignment: Alignment.center,
+              child: AnimatedOpacity(
+                opacity: loading ? 1 : 0,
+                duration: const Duration(milliseconds: 500),
+                child: CircularProgressIndicator(),
               ),
             )
           : ConstrainedBox(

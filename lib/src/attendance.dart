@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'group.dart';
 import 'group_data.dart';
 import 'user_data.dart';
+import 'widgets/animated_placeholder.dart';
 import 'widgets/app_logo.dart';
 import 'widgets/custom_cross_fade.dart';
 
@@ -140,8 +141,15 @@ class GroupsDropdown extends StatelessWidget {
     final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
     return Expanded(
       child: CustomCrossFade(
+        crossShrink: false,
+        duration: const Duration(milliseconds: 500),
         child: groupDataNotifier.groupList == null
-            ? const SizedBox.shrink()
+            ? const AnimatedPlaceholder(
+                height: 44,
+                constraints: BoxConstraints(
+                  maxWidth: 240,
+                ),
+              )
             : Container(
                 height: 44,
                 constraints: BoxConstraints(

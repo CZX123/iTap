@@ -40,7 +40,6 @@ class GroupActions extends StatelessWidget {
     bool wifiIsLegit = false;
     if (takenWithWifi) wifiIsLegit = verifyWifi(context);
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
-    final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
     if (takenWithWifi && wifiIsLegit || code != '') {
       if (takenWithWifi)
         print('Taking attendance with WiFi...');
@@ -78,7 +77,7 @@ class GroupActions extends StatelessWidget {
         'userkey': userDataNotifier.userKey,
         'action': 'takeAttendance',
         'org': userDataNotifier.org,
-        'group': groupDataNotifier.modifiedSelectedGroup,
+        'group': convertGroupName(groupDetails.groupName),
         'username': userDataNotifier.username,
         'code': code,
         'checkOut': groupDetails.checkTakenToday == 0 ? 'true' : 'false',
@@ -132,7 +131,9 @@ class GroupActions extends StatelessWidget {
     void typeCode() async {
       var code = await showCustomDialog<String>(
         context: context,
-        dialog: TypeCodeDialog(),
+        dialog: TypeCodeDialog(
+          groupDetails: groupDetails,
+        ),
       );
       if (code == null) return;
       takeAttendance(context, false, code);
@@ -177,7 +178,9 @@ class GroupActions extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => GenerateCodePage(),
+          builder: (context) => GenerateCodePage(
+            groupDetails: groupDetails,
+          ),
         ),
       );
     }
@@ -251,7 +254,9 @@ class GroupActions extends StatelessWidget {
 }
 
 class TypeCodeDialog extends StatefulWidget {
-  const TypeCodeDialog({Key key}) : super(key: key);
+  final GroupDetails groupDetails;
+  const TypeCodeDialog({Key key, @required this.groupDetails})
+      : super(key: key);
 
   @override
   _TypeCodeDialogState createState() => _TypeCodeDialogState();
@@ -288,8 +293,7 @@ class _TypeCodeDialogState extends State<TypeCodeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(
-          'Type Code for ${Provider.of<GroupDataNotifier>(context).selectedGroup}'),
+      title: Text('Type Code for ${widget.groupDetails.groupName}'),
       content: TextField(
         autofocus: true,
         decoration: InputDecoration(labelText: 'Code', errorText: _errorText),
