@@ -26,36 +26,66 @@ class _LoginPageState extends State<LoginPage> {
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.fromLTRB(
-          24,
-          MediaQuery.of(context).padding.top + 24,
-          24,
-          24,
+          0,
+          MediaQuery.of(context).padding.top + 20,
+          0,
+          0,
         ),
         constraints: BoxConstraints(
-          minHeight: MediaQuery.of(context).size.height -
-              MediaQuery.of(context).viewInsets.bottom,
+          minHeight: MediaQuery.of(context).size.height,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            const AppLogo(),
-            ValueListenableBuilder<FormType>(
-              valueListenable: _formTypeNotifier,
-              builder: (context, formType, child) {
-                return CustomCrossFade(
-                  child: formType == FormType.login
-                      ? LoginForm(
-                          formTypeNotifier: _formTypeNotifier,
-                        )
-                      : ResetPasswordForm(
-                          formTypeNotifier: _formTypeNotifier,
-                        ),
-                );
-              },
+            const TopBar(),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+              ),
+              child: ValueListenableBuilder<FormType>(
+                valueListenable: _formTypeNotifier,
+                builder: (context, formType, child) {
+                  return CustomCrossFade(
+                    child: formType == FormType.login
+                        ? LoginForm(
+                            formTypeNotifier: _formTypeNotifier,
+                          )
+                        : ResetPasswordForm(
+                            formTypeNotifier: _formTypeNotifier,
+                          ),
+                  );
+                },
+              ),
             ),
-            const SizedBox.shrink(),
+            const SizedBox(
+              height: 24,
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class TopBar extends StatelessWidget {
+  const TopBar({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 72,
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        children: <Widget>[
+          IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+          const SizedBox(
+            width: 4,
+          ),
+          const AppLogo(),
+        ],
       ),
     );
   }
@@ -134,7 +164,7 @@ class _LoginFormState extends State<LoginForm> {
               .showNoInternetSnackBar(context);
         }
         // Login again if there is an error
-        Future.delayed(const Duration(milliseconds: 500), () {
+        Future.delayed(const Duration(seconds: 1), () {
           _submitForm(true);
         });
       }
@@ -334,7 +364,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
               .showNoInternetSnackBar(context);
         }
         // Reset password again if there is an error
-        Future.delayed(const Duration(milliseconds: 500), () {
+        Future.delayed(const Duration(seconds: 1), () {
           _submitForm(true);
         });
       }

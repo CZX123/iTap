@@ -23,10 +23,11 @@ class CustomCrossFade extends StatelessWidget {
     );
     if (currentChild != null)
       element = Stack(
-        fit: StackFit.passthrough,
         children: <Widget>[
           Positioned.fill(
-            child: element,
+            child: ClipRect(
+              child: element,
+            ),
           ),
           currentChild,
         ],

@@ -64,7 +64,7 @@ class _GenerateCodePageState extends State<GenerateCodePage>
         Provider.of<InternetAvailibility>(context)
             .showNoInternetSnackBar(context, _scaffoldKey.currentState);
       }
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(seconds: 1), () {
         getCode(true);
       });
     }
@@ -104,65 +104,82 @@ class _GenerateCodePageState extends State<GenerateCodePage>
 
   @override
   Widget build(BuildContext context) {
+    final windowHeight = MediaQuery.of(context).size.height;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final appBarHeight = 56;
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
             'Code for ${Provider.of<GroupDataNotifier>(context).selectedGroup}'),
       ),
-      body: Center(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(
+          vertical: 24,
+        ),
         child: ValueListenableBuilder<String>(
           valueListenable: _codeNotifier,
           builder: (context, value, child) {
             return CustomCrossFade(
               child: value == null
-                  ? const SizedBox.shrink()
-                  : Column(
+                  ? Container(
+                      constraints: BoxConstraints(
+                        minHeight: windowHeight - topPadding - appBarHeight - 48,
+                      ),
+                      width: double.infinity,
+                    )
+                  : Container(
                       key: ValueKey(value),
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        QrImage(
-                          size: 240,
-                          data: value,
-                          version: 1,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onSurface,
-                          padding: EdgeInsets.zero,
-                          errorCorrectionLevel: QrErrorCorrectLevel.H,
-                        ),
-                        const SizedBox(
-                          height: 24,
-                        ),
-                        Text(
-                          value,
-                          style: Theme.of(context).textTheme.display3,
-                        ),
-                        const SizedBox(
-                          height: 24,
-                        ),
-                        SizedBox(
-                          width: 240,
-                          height: 6,
-                          child: ClipPath(
-                            clipper: ShapeBorderClipper(
-                                shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(3),
-                            )),
-                            child: ValueListenableBuilder<double>(
-                              valueListenable: _animationController,
-                              builder: (context, progress, child) {
-                                return LinearProgressIndicator(
-                                  backgroundColor:
-                                      Theme.of(context).dividerColor,
-                                  value: value != _codeNotifier.value
-                                      ? 1
-                                      : progress,
-                                );
-                              },
+                      constraints: BoxConstraints(
+                        minHeight: windowHeight - topPadding - appBarHeight - 48,
+                      ),
+                      width: double.infinity,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          QrImage(
+                            size: 240,
+                            data: value,
+                            version: 1,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onSurface,
+                            padding: EdgeInsets.zero,
+                            errorCorrectionLevel: QrErrorCorrectLevel.H,
+                          ),
+                          const SizedBox(
+                            height: 24,
+                          ),
+                          Text(
+                            value,
+                            style: Theme.of(context).textTheme.display3,
+                          ),
+                          const SizedBox(
+                            height: 24,
+                          ),
+                          SizedBox(
+                            width: 240,
+                            height: 6,
+                            child: ClipPath(
+                              clipper: ShapeBorderClipper(
+                                  shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(3),
+                              )),
+                              child: ValueListenableBuilder<double>(
+                                valueListenable: _animationController,
+                                builder: (context, progress, child) {
+                                  return LinearProgressIndicator(
+                                    backgroundColor:
+                                        Theme.of(context).dividerColor,
+                                    value: value != _codeNotifier.value
+                                        ? 1
+                                        : progress,
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
             );
           },

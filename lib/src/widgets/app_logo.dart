@@ -6,9 +6,10 @@ class AppLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Image.asset(
-          'icon/iTap.png',
+          'icon/iTap-small.png',
           width: 30,
           height: 30,
         ),

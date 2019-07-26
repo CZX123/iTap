@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,9 @@ import 'src/user_data.dart';
 import 'src/widgets/custom_cross_fade.dart';
 import 'src/widgets/no_internet.dart';
 import 'src/wifi.dart';
+import 'package:http/http.dart' as http; // Remove when done testing
+import 'dart:convert'; // Remove when done testing
+import 'src/widgets/custom_dialog.dart'; // Remove when done testing
 
 void main() {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -23,68 +27,39 @@ class Main extends StatelessWidget {
   const Main({Key key}) : super(key: key);
   static const platform = const MethodChannel('com.irs.itap/androidVersion');
 
-  Future<bool> checkAndroid8() {
-    if (Platform.isAndroid) return platform.invokeMethod<bool>('checkAndroid8');
-    return Future.value(false);
+  Future<CheckAndroid8> checkAndroid8() async {
+    if (Platform.isAndroid)
+      return Future.value(
+        CheckAndroid8(
+          await platform.invokeMethod<bool>('checkAndroid8'),
+        ),
+      );
+    return Future.value(CheckAndroid8(false));
   }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        FutureProvider.value(
-          initialData: false,
+        FutureProvider<CheckAndroid8>.value(
+          initialData: CheckAndroid8(false),
           value: checkAndroid8(),
-          catchError: (context, error) => false,
+          catchError: (context, error) => CheckAndroid8(false),
         ),
         Provider<InternetAvailibility>.value(
           value: InternetAvailibility(),
         ),
         ChangeNotifierProvider(
-          builder: (context) => UserDataNotifier(),
+          builder: (context) => NetworkNotifier(),
         ),
         ChangeNotifierProvider(
           builder: (context) => DarkModeNotifier(false),
         ),
         ChangeNotifierProvider(
+          builder: (context) => UserDataNotifier(),
+        ),
+        ChangeNotifierProvider(
           builder: (context) => GroupDataNotifier(),
-        ),
-        StreamProvider<NetworkDetails>(
-          builder: (context) {
-            return Connectivity()
-                .onConnectivityChanged
-                .asyncMap((result) async {
-              if (result == ConnectivityResult.wifi) {
-                String name = await Connectivity().getWifiName();
-                String mac = await Connectivity().getWifiBSSID();
-                return NetworkDetails(result: result, name: name, mac: mac);
-              } else
-                return NetworkDetails(result: result);
-            });
-          },
-          updateShouldNotify: (oldDetails, newDetails) {
-            return oldDetails != newDetails;
-          },
-        ),
-        ChangeNotifierProxyProvider<NetworkDetails, NetworkNotifier>(
-          builder: (context, details, notifier) {
-            if (notifier != null) notifier.value = details;
-            return NetworkNotifier(details);
-          },
-        ),
-        ProxyProvider2<NetworkDetails, NetworkNotifier, NetworkDetails>(
-          builder: (context, streamDetails, notifier, newDetails) {
-            if (notifier.value != null &&
-                (streamDetails == null ||
-                    streamDetails.result == ConnectivityResult.wifi &&
-                        streamDetails.name == null)) {
-              print('Wifi updated from NetworkNotifier: ${notifier.value}');
-              // if the notifier offers more useful info than the stream, then return the notifier instead
-              return notifier.value;
-            }
-            print('Wifi updated from StreamProvider: $streamDetails');
-            return streamDetails;
-          },
         ),
       ],
       child: Consumer<DarkModeNotifier>(
@@ -106,8 +81,42 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  static const platform = const MethodChannel('com.irs.itap/androidVersion');
+  final _connectivity = Connectivity();
+  StreamSubscription<ConnectivityResult> _connectivitySubscription;
   bool _loaded = false;
+
+  void _initNetwork() async {
+    ConnectivityResult result;
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      print('Error while initialising network: $e');
+    }
+    if (!mounted) return;
+    _updateNetwork(result);
+  }
+
+  void _updateNetwork(ConnectivityResult result) async {
+    if (result == ConnectivityResult.wifi) {
+      String name;
+      String mac;
+      try {
+        name = await Connectivity().getWifiName();
+      } catch (e) {
+        print('Failed to get wifi name: $e');
+      }
+      try {
+        mac = await Connectivity().getWifiBSSID();
+      } catch (e) {
+        print('Failed to get mac address: $e');
+      }
+      Provider.of<NetworkNotifier>(context, listen: false)
+          .updateNetwork(result, name, mac);
+    } else
+      Provider.of<NetworkNotifier>(context, listen: false)
+          .updateNetwork(result);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -126,6 +135,15 @@ class _HomeState extends State<Home> {
         _loaded = true;
       });
     });
+    _initNetwork();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateNetwork);
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -146,6 +164,51 @@ class _HomeState extends State<Home> {
       ),
       body: CustomCrossFade(
         child: child,
+      ),floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.swap_vert),
+        onPressed: () {
+          if (userDataNotifier.checkData())
+            userDataNotifier.logout(context);
+          else {
+            http.post('https://itap.ml/app/index.php', body: {
+              'token': 'rQQYP51jI87DnteO',
+              'action': 'login',
+              'org': 'hci',
+              'username': 'kent',
+              'password': 'kent',
+            }).then((response) {
+              if (response.statusCode == 200) {
+                final Map<String, dynamic> userData = jsonDecode(response.body);
+                print('Login Details: $userData');
+                final int success = userData['success'];
+                if (success == 0) {
+                  showCustomDialog(
+                    context: context,
+                    dialog: AlertDialog(
+                      title: Text('Error'),
+                      content: Text(userData['error_message']),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: Text('OK'),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        )
+                      ],
+                    ),
+                  );
+                } else if (success == 1) {
+                  Provider.of<UserDataNotifier>(context).updateData(
+                    userData['key'],
+                    'kent',
+                    userData['user'],
+                    'hci',
+                  );
+                }
+              }
+            });
+          }
+        },
       ),
     );
   }

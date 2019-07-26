@@ -23,13 +23,14 @@ class GroupActions extends StatelessWidget {
   }) : super(key: key);
 
   bool verifyWifi(BuildContext context) {
-    final networkDetails = Provider.of<NetworkDetails>(context, listen: false);
+    final networkNotifier =
+        Provider.of<NetworkNotifier>(context, listen: false);
     // The logic here may be confusing, but it works.
     // Everything here is just a negation of the original logic.
     return !groupDetails.wifiList.every((wifiDetails) {
-      return wifiDetails.ssid != networkDetails.name ||
+      return wifiDetails.ssid != networkNotifier.name ||
           wifiDetails.mac.substring(1, wifiDetails.macDigits) !=
-                  networkDetails.mac.substring(1, wifiDetails.macDigits) &&
+                  networkNotifier.mac.substring(1, wifiDetails.macDigits) &&
               wifiDetails.mac != 'all';
     });
   }
@@ -122,7 +123,7 @@ class GroupActions extends StatelessWidget {
               .showNoInternetSnackBar(context);
         }
         // Take attendance again if there is an error
-        Future.delayed(const Duration(milliseconds: 500), () {
+        Future.delayed(const Duration(seconds: 1), () {
           takeAttendance(context, takenWithWifi, code, true);
         });
       }
@@ -194,13 +195,13 @@ class GroupActions extends StatelessWidget {
     }
 
     void wifiLongPress() {
-      final networkDetails =
-          Provider.of<NetworkDetails>(context, listen: false);
+      final networkNotifier =
+          Provider.of<NetworkNotifier>(context, listen: false);
       showCustomDialog(
         context: context,
         dialog: AlertDialog(
           title: Text('Debug'),
-          content: Text('MAC address: ${networkDetails.mac}'),
+          content: Text('MAC address: ${networkNotifier.mac}'),
           actions: <Widget>[
             FlatButton(
               child: Text('OK'),
@@ -282,7 +283,7 @@ class GroupActions extends StatelessWidget {
         ),
         SizedBox(
           height:
-              children.length == 0 ? 32 : MediaQuery.of(context).padding.bottom,
+              children.length == 0 ? 36 : MediaQuery.of(context).padding.bottom,
         ),
       ],
     );

@@ -69,7 +69,7 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
             .showNoInternetSnackBar(context);
       }
       // Get group details again if there is an error
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(seconds: 1), () {
         getGroupDetails(true, true);
       });
     });
@@ -123,7 +123,7 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
       // This is to prevent the negative box constraints errror
     }
     final topPadding = MediaQuery.of(context).padding.top;
-    final topBarHeight = 80; // hardcoded
+    final topBarHeight = 84; // hardcoded
     final present = _groupDetails?.checkTakenToday == 0;
     return CustomCrossFade(
       child: _groupDetails == null
@@ -177,21 +177,24 @@ class GroupStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Icon(
-          present ? Icons.check : Icons.clear,
-          size: 56,
-          color: present ? Colors.green : Colors.red,
-        ),
-        Text(
-          present ? 'Present' : 'Not Marked',
-          style: Theme.of(context).textTheme.display2.copyWith(
-                color: present ? Colors.green : Colors.red,
-              ),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 6, 0, 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Icon(
+            present ? Icons.check : Icons.clear,
+            size: 56,
+            color: present ? Colors.green : Colors.red,
+          ),
+          Text(
+            present ? 'Present' : 'Not Marked',
+            style: Theme.of(context).textTheme.display2.copyWith(
+                  color: present ? Colors.green : Colors.red,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -271,7 +274,7 @@ class GroupTimings extends StatelessWidget {
         Provider.of<InternetAvailibility>(context)
             .showNoInternetSnackBar(context);
       }
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(seconds: 1), () {
         addRemarks(context, isCheckOut, remarks, true);
       });
     }
@@ -279,66 +282,63 @@ class GroupTimings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: <Widget>[
-        Column(
-          children: <Widget>[
-            Text(
-              groupDetails.checkIn,
-              style: Theme.of(context).textTheme.display1,
-            ),
-            Text('Checked in'),
-            SizedBox(
-              height: 28,
-              child: IconButton(
-                iconSize: 20,
-                icon: groupDetails.remarks == ''
-                    ? const Icon(Icons.add_comment)
-                    : const Icon(Icons.comment),
-                tooltip: groupDetails.remarks == ''
-                    ? 'Add check in remarks'
-                    : 'Edit check in remarks',
-                onPressed: () {
-                  showRemarksDialog(context, false);
-                },
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          Column(
+            children: <Widget>[
+              Text(
+                groupDetails.checkIn,
+                style: Theme.of(context).textTheme.display1,
               ),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-          ],
-        ),
-        Column(
-          children: <Widget>[
-            Text(
-              groupDetails.checkOut == '' ? '–' : groupDetails.checkOut,
-              style: Theme.of(context).textTheme.display1,
-            ),
-            Text('Checked out'),
-            SizedBox(
-              height: 28,
-              child: groupDetails.checkOut == ''
-                  ? null
-                  : IconButton(
-                      iconSize: 20,
-                      icon: groupDetails.remarksCheckout == ''
-                          ? const Icon(Icons.add_comment)
-                          : const Icon(Icons.comment),
-                      tooltip: groupDetails.remarks == ''
-                          ? 'Add check out remarks'
-                          : 'Edit check out remarks',
-                      onPressed: () {
-                        showRemarksDialog(context, true);
-                      },
-                    ),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-          ],
-        ),
-      ],
+              Text('Checked in'),
+              SizedBox(
+                height: 28,
+                child: IconButton(
+                  iconSize: 20,
+                  icon: groupDetails.remarks == ''
+                      ? const Icon(Icons.add_comment)
+                      : const Icon(Icons.comment),
+                  tooltip: groupDetails.remarks == ''
+                      ? 'Add check in remarks'
+                      : 'Edit check in remarks',
+                  onPressed: () {
+                    showRemarksDialog(context, false);
+                  },
+                ),
+              ),
+            ],
+          ),
+          Column(
+            children: <Widget>[
+              Text(
+                groupDetails.checkOut == '' ? '–' : groupDetails.checkOut,
+                style: Theme.of(context).textTheme.display1,
+              ),
+              Text('Checked out'),
+              SizedBox(
+                height: 28,
+                child: groupDetails.checkOut == ''
+                    ? null
+                    : IconButton(
+                        iconSize: 20,
+                        icon: groupDetails.remarksCheckout == ''
+                            ? const Icon(Icons.add_comment)
+                            : const Icon(Icons.comment),
+                        tooltip: groupDetails.remarks == ''
+                            ? 'Add check out remarks'
+                            : 'Edit check out remarks',
+                        onPressed: () {
+                          showRemarksDialog(context, true);
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

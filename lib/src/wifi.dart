@@ -4,41 +4,43 @@ import 'package:provider/provider.dart';
 import 'widgets/custom_cross_fade.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class NetworkDetails {
-  ConnectivityResult result;
-  String name;
-  String mac;
+// For Android 8 and above, location
+class CheckAndroid8 {
+  final bool value;
+  const CheckAndroid8(this.value);
+}
 
-  NetworkDetails({
-    @required this.result,
-    this.name,
-    this.mac,
-  });
+class NetworkNotifier extends ChangeNotifier {
+  ConnectivityResult _result;
+  ConnectivityResult get result => _result;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        other is NetworkDetails &&
-            runtimeType == other.runtimeType &&
-            name == other.name &&
-            mac == other.mac;
+  String _name;
+  String get name => _name;
+
+  String _mac;
+  String get mac => _mac;
+
+  bool isNull() {
+    return _result == null && _name == null && _mac == null;
   }
 
-  @override
-  int get hashCode => hashValues(result, name, mac);
+  void updateNetwork(ConnectivityResult result, [String name, String mac]) {
+    if (_result != result || _name != name || _mac != mac) {
+      _result = result;
+      _name = name;
+      _mac = mac;
+      notifyListeners();
+    }
+  }
 
   @override
   String toString() {
-    var value = 'NetworkDetails(result: $result';
-    if (name != null) value += ', name: $name';
-    if (mac != null) value += ', mac: $mac';
+    var value = 'NetworkNotifier(result: $_result';
+    if (_name != null) value += ', name: $_name';
+    if (_mac != null) value += ', mac: $_mac';
     value += ')';
     return value;
   }
-}
-
-class NetworkNotifier extends ValueNotifier<NetworkDetails> {
-  NetworkNotifier(NetworkDetails value) : super(value);
 }
 
 class WifiWidget extends StatefulWidget {
@@ -54,11 +56,21 @@ class _WifiWidgetState extends State<WifiWidget> {
   String _errorText = '';
 
   void recheckConnectivity() {
-    final notifier = Provider.of<NetworkNotifier>(context);
+    final networkNotifier = Provider.of<NetworkNotifier>(context);
     Connectivity().checkConnectivity().then((result) async {
       if (result == ConnectivityResult.wifi) {
-        final name = await Connectivity().getWifiName();
-        final mac = await Connectivity().getWifiBSSID();
+        String name;
+        String mac;
+        try {
+          name = await Connectivity().getWifiName();
+        } catch (e) {
+          print('Failed to get wifi name: $e');
+        }
+        try {
+          mac = await Connectivity().getWifiBSSID();
+        } catch (e) {
+          print('Failed to get mac address: $e');
+        }
         if (name == null) {
           final errorText = 'Location is not turned on';
           if (_errorText != errorText)
@@ -66,31 +78,25 @@ class _WifiWidgetState extends State<WifiWidget> {
               _errorText = errorText;
             });
         } else {
-          notifier.value = NetworkDetails(
-            result: result,
-            name: name,
-            mac: mac,
-          );
+          networkNotifier.updateNetwork(result, name, mac);
         }
       } else {
-        notifier.value = NetworkDetails(
-          result: result,
-        );
+        networkNotifier.updateNetwork(result);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    var networkDetails = Provider.of<NetworkDetails>(context);
-    if (networkDetails == null) {
+    final networkNotifier = Provider.of<NetworkNotifier>(context);
+    if (networkNotifier.isNull()) {
       print('Network Details is null! Checking connectivity again...');
       recheckConnectivity();
     }
-    _wifiName = networkDetails?.name ?? _wifiName;
-    _connectedToWifi = networkDetails?.result == ConnectivityResult.wifi;
+    _wifiName = networkNotifier?.name ?? _wifiName;
+    _connectedToWifi = networkNotifier?.result == ConnectivityResult.wifi;
     if (_connectedToWifi && _wifiName == null) {
-      if (Provider.of<bool>(context)) {
+      if (Provider.of<CheckAndroid8>(context).value) {
         print(
             'Error! Cannot get wifi name because location or location permission is not turned on!');
         PermissionHandler()
@@ -127,7 +133,7 @@ class _WifiWidgetState extends State<WifiWidget> {
       }
     }
     return CustomCrossFade(
-      child: networkDetails == null
+      child: networkNotifier.isNull()
           ? const SizedBox(
               height: 48,
             )

@@ -51,7 +51,7 @@ class _AttendancePageState extends State<AttendancePage>
             .showNoInternetSnackBar(context);
       }
       // Get groups again if there is an error
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(seconds: 1), () {
         getGroups(true);
       });
     });
@@ -99,7 +99,7 @@ class _AttendancePageState extends State<AttendancePage>
       child: Column(
         children: <Widget>[
           SizedBox(
-            height: MediaQuery.of(context).padding.top + 16,
+            height: MediaQuery.of(context).padding.top + 20,
           ),
           TopBar(),
           const SizedBox(
@@ -121,9 +121,6 @@ class TopBar extends StatelessWidget {
       height: 48,
       child: Row(
         children: <Widget>[
-          const SizedBox(
-            width: 4,
-          ),
           IconButton(
             icon: Icon(Icons.menu),
             onPressed: () => Scaffold.of(context).openDrawer(),
