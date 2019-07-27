@@ -148,6 +148,17 @@ class GroupActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    void _updateAppBar() {
+      Brightness statusBarBrightness;
+      if (Provider.of<DarkModeNotifier>(context).value) {
+        statusBarBrightness = Brightness.dark;
+      } else {
+        statusBarBrightness = Brightness.light;
+      }
+      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark
+          .copyWith(statusBarBrightness: statusBarBrightness));
+    }
+
     void typeCode() async {
       var code = await showCustomDialog<String>(
         context: context,
@@ -218,9 +229,12 @@ class GroupActions extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => GenerateCodePage(
-            groupDetails: groupDetails,
-          ),
+            builder: (context) => GenerateCodePage(
+                  groupDetails: groupDetails,
+                )),
+      ).whenComplete(
+        () => Future.delayed(Duration(milliseconds: 100)).then(
+          (_) => _updateAppBar(),
         ),
       );
     }

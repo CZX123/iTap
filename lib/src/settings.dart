@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'theme.dart';
@@ -22,6 +23,17 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
   Widget build(BuildContext context) {
     final darkModeNotifier = Provider.of<DarkModeNotifier>(context);
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
+
+    void _updateAppBar() {
+      Brightness statusBarBrightness;
+      if (Provider.of<DarkModeNotifier>(context).value) {
+        statusBarBrightness = Brightness.dark;
+      } else {
+        statusBarBrightness = Brightness.light;
+      }
+      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark
+          .copyWith(statusBarBrightness: statusBarBrightness));
+    }
 
     if (userDataNotifier.checkData()) {
       _userKey = userDataNotifier.userKey;
@@ -61,12 +73,13 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) {
-                            return WebViewPage(
-                              title: 'About iTap',
-                              url: 'https://itap.ml/app/about/?v=2.0',
-                            );
-                          },
+                            builder: (context) => WebViewPage(
+                                  title: 'About iTap',
+                                  url: 'https://itap.ml/app/about/?v=2.0',
+                                )),
+                      ).whenComplete(
+                        () => Future.delayed(Duration(milliseconds: 100)).then(
+                          (_) => _updateAppBar(),
                         ),
                       );
                     },
@@ -169,7 +182,8 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
-    final userDataNotifier = Provider.of<UserDataNotifier>(context, listen: false);
+    final userDataNotifier =
+        Provider.of<UserDataNotifier>(context, listen: false);
     return Column(
       children: <Widget>[
         Container(
