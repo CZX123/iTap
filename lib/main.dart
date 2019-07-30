@@ -90,7 +90,7 @@ class _HomeState extends State<Home> {
     try {
       final response = await http.post('https://itap.ml/app/index.php', body: {
         'action': 'getNotification',
-        'v': Platform.isAndroid ? 'android2.0' : 'ios2.0'
+        'v': Platform.isAndroid ? 'android2.1' : 'ios2.1'
       }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final Map<String, dynamic> parsedJson = jsonDecode(response.body);
