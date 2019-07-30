@@ -46,8 +46,8 @@ class Main extends StatelessWidget {
           value: checkAndroid8(),
           catchError: (context, error) => CheckAndroid8(false),
         ),
-        Provider<InternetAvailibility>.value(
-          value: InternetAvailibility(),
+        ChangeNotifierProvider(
+          builder: (context) => InternetAvailabilityNotifier(true),
         ),
         ChangeNotifierProvider(
           builder: (context) => NetworkNotifier(),
@@ -101,12 +101,12 @@ class _HomeState extends State<Home> {
       String name;
       String mac;
       try {
-        name = await Connectivity().getWifiName();
+        name = await _connectivity.getWifiName();
       } catch (e) {
         print('Failed to get wifi name: $e');
       }
       try {
-        mac = await Connectivity().getWifiBSSID();
+        mac = await _connectivity.getWifiBSSID();
       } catch (e) {
         print('Failed to get mac address: $e');
       }
@@ -162,9 +162,23 @@ class _HomeState extends State<Home> {
       drawer: Drawer(
         child: SettingsDrawer(),
       ),
-      body: CustomCrossFade(
-        child: child,
-      ),floatingActionButton: FloatingActionButton(
+      body: Stack(
+        children: <Widget>[
+          CustomCrossFade(
+            child: child,
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 16 + MediaQuery.of(context).padding.bottom,
+            child: Align(
+              alignment: Alignment.center,
+              child: NoInternetWidget(),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
         child: Icon(Icons.swap_vert),
         onPressed: () {
           if (userDataNotifier.checkData())

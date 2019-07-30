@@ -24,7 +24,7 @@ class _GenerateCodePageState extends State<GenerateCodePage>
   String _nextCode;
   int _interval;
 
-  void getCode([bool error = false]) async {
+  void getCode() async {
     try {
       final userDataNotifier = Provider.of<UserDataNotifier>(context);
       final response = await http.post('https://itap.ml/app/index.php', body: {
@@ -33,12 +33,10 @@ class _GenerateCodePageState extends State<GenerateCodePage>
         'org': userDataNotifier.org,
         'group': convertGroupName(widget.groupDetails.groupName),
         'username': userDataNotifier.username,
-      });
+      }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        if (error) {
-          Provider.of<InternetAvailibility>(context)
-              .removeSnackbar(context, _scaffoldKey.currentState);
-        }
+        Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+            .value = true;
         Map<String, dynamic> parsedJson = jsonDecode(response.body);
         final details = GenerateCodeDetails.fromJson(parsedJson);
         print(details);
@@ -60,12 +58,10 @@ class _GenerateCodePageState extends State<GenerateCodePage>
       }
     } catch (e) {
       print('Error while generating code: $e');
-      if (!error) {
-        Provider.of<InternetAvailibility>(context)
-            .showNoInternetSnackBar(context, _scaffoldKey.currentState);
-      }
+      Provider.of<InternetAvailabilityNotifier>(context, listen: false).value =
+          false;
       Future.delayed(const Duration(seconds: 1), () {
-        getCode(true);
+        getCode();
       });
     }
   }
@@ -113,77 +109,92 @@ class _GenerateCodePageState extends State<GenerateCodePage>
         title: Text(
             'Code for ${Provider.of<GroupDataNotifier>(context).selectedGroup}'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          vertical: 24,
-        ),
-        child: ValueListenableBuilder<String>(
-          valueListenable: _codeNotifier,
-          builder: (context, value, child) {
-            return CustomCrossFade(
-              child: value == null
-                  ? Container(
-                      constraints: BoxConstraints(
-                        minHeight: windowHeight - topPadding - appBarHeight - 48,
-                      ),
-                      width: double.infinity,
-                    )
-                  : Container(
-                      key: ValueKey(value),
-                      constraints: BoxConstraints(
-                        minHeight: windowHeight - topPadding - appBarHeight - 48,
-                      ),
-                      width: double.infinity,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          QrImage(
-                            size: 240,
-                            data: value,
-                            version: 1,
-                            foregroundColor:
-                                Theme.of(context).colorScheme.onSurface,
-                            padding: EdgeInsets.zero,
-                            errorCorrectionLevel: QrErrorCorrectLevel.H,
+      body: Stack(
+        children: <Widget>[
+          SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              vertical: 24,
+            ),
+            child: ValueListenableBuilder<String>(
+              valueListenable: _codeNotifier,
+              builder: (context, value, child) {
+                return CustomCrossFade(
+                  child: value == null
+                      ? Container(
+                          constraints: BoxConstraints(
+                            minHeight:
+                                windowHeight - topPadding - appBarHeight - 48,
                           ),
-                          const SizedBox(
-                            height: 24,
+                          width: double.infinity,
+                        )
+                      : Container(
+                          key: ValueKey(value),
+                          constraints: BoxConstraints(
+                            minHeight:
+                                windowHeight - topPadding - appBarHeight - 48,
                           ),
-                          Text(
-                            value,
-                            style: Theme.of(context).textTheme.display3,
-                          ),
-                          const SizedBox(
-                            height: 24,
-                          ),
-                          SizedBox(
-                            width: 240,
-                            height: 6,
-                            child: ClipPath(
-                              clipper: ShapeBorderClipper(
-                                  shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(3),
-                              )),
-                              child: ValueListenableBuilder<double>(
-                                valueListenable: _animationController,
-                                builder: (context, progress, child) {
-                                  return LinearProgressIndicator(
-                                    backgroundColor:
-                                        Theme.of(context).dividerColor,
-                                    value: value != _codeNotifier.value
-                                        ? 1
-                                        : progress,
-                                  );
-                                },
+                          width: double.infinity,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              QrImage(
+                                size: 240,
+                                data: value,
+                                version: 1,
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.onSurface,
+                                padding: EdgeInsets.zero,
+                                errorCorrectionLevel: QrErrorCorrectLevel.H,
                               ),
-                            ),
+                              const SizedBox(
+                                height: 24,
+                              ),
+                              Text(
+                                value,
+                                style: Theme.of(context).textTheme.display3,
+                              ),
+                              const SizedBox(
+                                height: 24,
+                              ),
+                              SizedBox(
+                                width: 240,
+                                height: 6,
+                                child: ClipPath(
+                                  clipper: ShapeBorderClipper(
+                                      shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(3),
+                                  )),
+                                  child: ValueListenableBuilder<double>(
+                                    valueListenable: _animationController,
+                                    builder: (context, progress, child) {
+                                      return LinearProgressIndicator(
+                                        backgroundColor:
+                                            Theme.of(context).dividerColor,
+                                        value: value != _codeNotifier.value
+                                            ? 1
+                                            : progress,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-            );
-          },
-        ),
+                        ),
+                );
+              },
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 16 + MediaQuery.of(context).padding.bottom,
+            child: Align(
+              alignment: Alignment.center,
+              child: NoInternetWidget(),
+            ),
+          ),
+        ],
       ),
     );
   }

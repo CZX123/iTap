@@ -20,6 +20,13 @@ class NetworkNotifier extends ChangeNotifier {
   String _mac;
   String get mac => _mac;
 
+  String _errorText;
+  String get errorText => _errorText;
+  set errorText(String errorText) {
+    _errorText = errorText;
+    notifyListeners();
+  }
+
   bool isNull() {
     return _result == null && _name == null && _mac == null;
   }
@@ -29,6 +36,11 @@ class NetworkNotifier extends ChangeNotifier {
       _result = result;
       _name = name;
       _mac = mac;
+      if (result != ConnectivityResult.wifi) {
+        _errorText = 'Not connected to WiFi';
+      } else if (name != null && mac != null) {
+        _errorText = 'Not connected to the correct WiFi';
+      }
       notifyListeners();
     }
   }
@@ -53,7 +65,6 @@ class WifiWidget extends StatefulWidget {
 class _WifiWidgetState extends State<WifiWidget> {
   String _wifiName;
   bool _connectedToWifi;
-  String _errorText = '';
 
   void recheckConnectivity() {
     final networkNotifier = Provider.of<NetworkNotifier>(context);
@@ -72,11 +83,7 @@ class _WifiWidgetState extends State<WifiWidget> {
           print('Failed to get mac address: $e');
         }
         if (name == null) {
-          final errorText = 'Location is not turned on';
-          if (_errorText != errorText)
-            setState(() {
-              _errorText = errorText;
-            });
+          networkNotifier.errorText = 'Location is not turned on';
         } else {
           networkNotifier.updateNetwork(result, name, mac);
         }
@@ -103,23 +110,17 @@ class _WifiWidgetState extends State<WifiWidget> {
             .checkPermissionStatus(PermissionGroup.location)
             .then((status) {
           if (status != PermissionStatus.granted) {
-            var errorText = 'Location permission denied';
             if (status == PermissionStatus.disabled)
-              errorText = 'Location is not turned on';
-            if (_errorText != errorText)
-              setState(() {
-                _errorText = errorText;
-              });
+              networkNotifier.errorText = 'Location is not turned on';
+            else
+              networkNotifier.errorText = 'Location permission denied';
             PermissionHandler()
                 .requestPermissions([PermissionGroup.location]).then((value) {
               if (value[PermissionGroup.location] != PermissionStatus.granted) {
-                var errorText = 'Location permission denied';
                 if (status == PermissionStatus.disabled)
-                  errorText = 'Location is not turned on';
-                if (_errorText != errorText)
-                  setState(() {
-                    _errorText = errorText;
-                  });
+                  networkNotifier.errorText = 'Location is not turned on';
+                else
+                  networkNotifier.errorText = 'Location permission denied';
               } else {
                 recheckConnectivity();
               }
@@ -153,38 +154,32 @@ class _WifiWidgetState extends State<WifiWidget> {
                   const SizedBox(
                     width: 12,
                   ),
-                  if (_connectedToWifi)
-                    if (_wifiName != null)
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text('Connected to:'),
-                          CustomCrossFade(
-                            child: Text(
-                              _wifiName ?? '',
-                              key: ValueKey(_wifiName),
-                              style: Theme.of(context).textTheme.body2.copyWith(
-                                    height: .85,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
-                            ),
+                  if (_connectedToWifi && _wifiName != null)
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text('Connected to:'),
+                        CustomCrossFade(
+                          child: Text(
+                            _wifiName ?? '',
+                            key: ValueKey(_wifiName),
+                            style: Theme.of(context).textTheme.body2.copyWith(
+                                  height: .85,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
                           ),
-                        ],
-                      )
-                    else
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 8),
-                        child: CustomCrossFade(
-                          key: ValueKey(_errorText),
-                          child: Text(_errorText),
                         ),
-                      )
+                      ],
+                    )
                   else
                     Padding(
                       padding: EdgeInsets.only(bottom: 8),
-                      child: Text('Not connected to WiFi'),
+                      child: CustomCrossFade(
+                        key: ValueKey(networkNotifier.errorText),
+                        child: Text(networkNotifier.errorText),
+                      ),
                     ),
                 ],
               ),

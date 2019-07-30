@@ -109,63 +109,59 @@ class _LoginFormState extends State<LoginForm> {
   String _username;
   String _password;
 
-  void _submitForm([bool error = false]) {
+  void _submitForm() async {
     FormState state = _formKey.currentState;
     if (state.validate()) {
       state.save();
       try {
-        http.post('https://itap.ml/app/index.php', body: {
+        final response =
+            await http.post('https://itap.ml/app/index.php', body: {
           'token': 'rQQYP51jI87DnteO',
           'action': 'login',
           'org': _org,
           'username': _username,
           'password': _password,
-        }).then((response) {
-          if (response.statusCode == 200) {
-            if (error) {
-              Provider.of<InternetAvailibility>(context)
-                  .removeSnackbar(context);
-            }
-            final Map<String, dynamic> userData = jsonDecode(response.body);
-            print('Login Details: $userData');
-            final int success = userData['success'];
-            if (success == 0) {
-              showCustomDialog(
-                context: context,
-                dialog: AlertDialog(
-                  title: Text('Error'),
-                  content: Text(userData['error_message']),
-                  actions: <Widget>[
-                    FlatButton(
-                      child: Text('OK'),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    )
-                  ],
-                ),
-              );
-            } else if (success == 1) {
-              Provider.of<UserDataNotifier>(context).updateData(
-                userData['key'],
-                _username,
-                userData['user'],
-                _org,
-              );
-            } // if success == 2
-          } else {
-            print('Error ${response.statusCode} while logging in');
-          }
-        });
+        }).timeout(const Duration(seconds: 10));
+        if (response.statusCode == 200) {
+          Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+              .value = true;
+          final Map<String, dynamic> userData = jsonDecode(response.body);
+          print('Login Details: $userData');
+          final int success = userData['success'];
+          if (success == 0) {
+            showCustomDialog(
+              context: context,
+              dialog: AlertDialog(
+                title: Text('Error'),
+                content: Text(userData['error_message']),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              ),
+            );
+          } else if (success == 1) {
+            Provider.of<UserDataNotifier>(context).updateData(
+              userData['key'],
+              _username,
+              userData['user'],
+              _org,
+            );
+          } // if success == 2
+        } else {
+          print('Error ${response.statusCode} while logging in');
+        }
       } catch (e) {
         print('Error while logging in: $e');
-        if (!error) {
-          Provider.of<InternetAvailibility>(context)
-              .showNoInternetSnackBar(context);
-        }
+        Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+            .value = false;
         // Login again if there is an error
         Future.delayed(const Duration(seconds: 1), () {
-          _submitForm(true);
+          _submitForm();
         });
       }
     } else
@@ -300,72 +296,68 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
   String _org;
   String _username;
 
-  void _submitForm([bool error = false]) {
+  void _submitForm() async {
     print('yay?');
     FormState state = _formKey.currentState;
     if (state.validate()) {
       state.save();
       try {
-        http.post('https://itap.ml/app/index.php', body: {
+        final response =
+            await http.post('https://itap.ml/app/index.php', body: {
           'token': 'rQQYP51jI87DnteO',
           'action': 'forgotPassword',
           'org': _org,
           'username': _username,
-        }).then((response) {
-          if (response.statusCode == 200) {
-            if (error) {
-              Provider.of<InternetAvailibility>(context)
-                  .removeSnackbar(context);
-            }
-            final Map<String, dynamic> userData = jsonDecode(response.body);
-            print('Reset Password Details: $userData');
-            final int success = userData['success'];
-            if (success == 0) {
-              showCustomDialog(
-                context: context,
-                dialog: AlertDialog(
-                  title: Text('Error'),
-                  content: Text(userData['error_message']),
-                  actions: <Widget>[
-                    FlatButton(
-                      child: Text('OK'),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              );
-            } else if (success == 1) {
-              showCustomDialog(
-                context: context,
-                dialog: AlertDialog(
-                  title: Text('Success'),
-                  content: Text(userData['error_message']),
-                  actions: <Widget>[
-                    FlatButton(
-                      child: Text('OK'),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              );
-            }
-          } else {
-            print('Error ${response.statusCode} while resetting password');
+        }).timeout(const Duration(seconds: 10));
+        if (response.statusCode == 200) {
+          Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+              .value = true;
+          final Map<String, dynamic> userData = jsonDecode(response.body);
+          print('Reset Password Details: $userData');
+          final int success = userData['success'];
+          if (success == 0) {
+            showCustomDialog(
+              context: context,
+              dialog: AlertDialog(
+                title: Text('Error'),
+                content: Text(userData['error_message']),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            );
+          } else if (success == 1) {
+            showCustomDialog(
+              context: context,
+              dialog: AlertDialog(
+                title: Text('Success'),
+                content: Text(userData['error_message']),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            );
           }
-        });
+        } else {
+          print('Error ${response.statusCode} while resetting password');
+        }
       } catch (e) {
         print('Error while resetting password: $e');
-        if (!error) {
-          Provider.of<InternetAvailibility>(context)
-              .showNoInternetSnackBar(context);
-        }
+        Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+            .value = false;
         // Reset password again if there is an error
         Future.delayed(const Duration(seconds: 1), () {
-          _submitForm(true);
+          _submitForm();
         });
       }
     } else

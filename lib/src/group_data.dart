@@ -39,9 +39,11 @@ class GroupDataNotifier extends ChangeNotifier {
 class GroupDetails {
   final String groupName;
   final int checkTakenToday;
+  final int checkSession;
   final int wifiEnabled;
   final int codeEnabled;
   final int checkCheckOut;
+  final int checkOutDialog;
   final String checkIn;
   final String checkOut;
   final String level;
@@ -52,9 +54,11 @@ class GroupDetails {
   const GroupDetails({
     this.groupName,
     this.checkTakenToday,
+    this.checkSession,
     this.wifiEnabled,
     this.codeEnabled,
     this.checkCheckOut,
+    this.checkOutDialog,
     this.checkIn,
     this.checkOut,
     this.level,
@@ -67,9 +71,11 @@ class GroupDetails {
     return GroupDetails(
       groupName: parsedJson['group_name'],
       checkTakenToday: parsedJson['checkTakenToday'],
+      checkSession: parsedJson['checkSession'],
       wifiEnabled: parsedJson['wifiEnabled'],
       codeEnabled: parsedJson['codeEnabled'],
       checkCheckOut: parsedJson['checkCheckOut'],
+      checkOutDialog: parsedJson['checkOutDialog'],
       checkIn: parsedJson['checkin'],
       checkOut: parsedJson['checkout'],
       level: parsedJson['level'],
@@ -87,9 +93,11 @@ class GroupDetails {
         other is GroupDetails &&
             groupName == other.groupName &&
             checkTakenToday == other.checkTakenToday &&
+            checkSession == other.checkSession &&
             wifiEnabled == other.wifiEnabled &&
             codeEnabled == other.codeEnabled &&
             checkCheckOut == other.checkCheckOut &&
+            checkOutDialog == other.checkOutDialog &&
             checkIn == other.checkIn &&
             checkOut == other.checkOut &&
             level == other.level &&
@@ -103,9 +111,11 @@ class GroupDetails {
     return hashValues(
       groupName,
       checkTakenToday,
+      checkSession,
       wifiEnabled,
       codeEnabled,
       checkCheckOut,
+      checkOutDialog,
       checkIn,
       checkOut,
       level,
@@ -117,7 +127,7 @@ class GroupDetails {
 
   @override
   String toString() {
-    return 'GroupDetails(groupName: $groupName, checkTakenToday: $checkTakenToday, wifiEnabled: $wifiEnabled, codeEnabled: $codeEnabled, checkCheckOut: $checkCheckOut, checkIn: $checkIn, checkOut: $checkOut, level: $level, remarks: $remarks, remarksCheckout: $remarksCheckout, wifiList: $wifiList)';
+    return 'GroupDetails(groupName: $groupName, checkTakenToday: $checkTakenToday, checkSession: $checkSession, wifiEnabled: $wifiEnabled, codeEnabled: $codeEnabled, checkCheckOut: $checkCheckOut, checkOutDialog: $checkOutDialog, checkIn: $checkIn, checkOut: $checkOut, level: $level, remarks: $remarks, remarksCheckout: $remarksCheckout, wifiList: $wifiList)';
   }
 }
 

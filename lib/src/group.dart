@@ -22,7 +22,9 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
   GroupDetails _groupDetails;
   bool loading = false;
 
-  void getGroupDetails([bool lifecycleChange = false, bool error = false]) {
+  void getGroupDetails([
+    bool lifecycleChange = false,
+  ]) async {
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
     final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
     if (userDataNotifier?.userKey == null ||
@@ -38,17 +40,17 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
         });
       });
     }
-    http.post('https://itap.ml/app/index.php', body: {
-      'userkey': userDataNotifier.userKey,
-      'action': 'getGroupDetails',
-      'org': userDataNotifier.org,
-      'username': userDataNotifier.username,
-      'group': convertGroupName(groupDataNotifier.selectedGroup),
-    }).then((response) {
+    try {
+      final response = await http.post('https://itap.ml/app/index.php', body: {
+        'userkey': userDataNotifier.userKey,
+        'action': 'getGroupDetails',
+        'org': userDataNotifier.org,
+        'username': userDataNotifier.username,
+        'group': convertGroupName(groupDataNotifier.selectedGroup),
+      }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        if (error) {
-          Provider.of<InternetAvailibility>(context).removeSnackbar(context);
-        }
+        Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+            .value = true;
         timer?.cancel();
         final Map<String, dynamic> parsedJson = jsonDecode(response.body);
         final newGroupDetails = GroupDetails.fromJson(parsedJson);
@@ -62,17 +64,15 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
       } else {
         print('Error ${response.statusCode} while getting group details');
       }
-    }).catchError((e) {
+    } catch (e) {
       print('Error while getting group details: $e');
-      if (!error) {
-        Provider.of<InternetAvailibility>(context)
-            .showNoInternetSnackBar(context);
-      }
+      Provider.of<InternetAvailabilityNotifier>(context, listen: false).value =
+          false;
       // Get group details again if there is an error
       Future.delayed(const Duration(seconds: 1), () {
-        getGroupDetails(true, true);
+        getGroupDetails(true);
       });
-    });
+    }
   }
 
   @override
@@ -119,7 +119,7 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
     var windowHeight = MediaQuery.of(context).size.height;
     if (windowHeight == 0) {
       windowHeight =
-          640; // Reasonable value, windowHeight will get update immediately after
+          640; // Reasonable value, windowHeight will get updated immediately after
       // This is to prevent the negative box constraints errror
     }
     final topPadding = MediaQuery.of(context).padding.top;
@@ -223,9 +223,8 @@ class GroupTimings extends StatelessWidget {
   void addRemarks(
     BuildContext context,
     bool isCheckOut,
-    String remarks, [
-    bool error = false,
-  ]) async {
+    String remarks,
+  ) async {
     if (!isCheckOut && groupDetails.remarks == remarks ||
         isCheckOut && groupDetails.remarksCheckout == remarks) return;
     try {
@@ -237,11 +236,10 @@ class GroupTimings extends StatelessWidget {
         'group': convertGroupName(groupDetails.groupName),
         'username': userDataNotifier.username,
         (isCheckOut ? 'remarks_checkout' : 'remarks'): remarks,
-      });
+      }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        if (error) {
-          Provider.of<InternetAvailibility>(context).removeSnackbar(context);
-        }
+        Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+            .value = true;
         final Map<String, dynamic> parsedJson = jsonDecode(response.body);
         if (parsedJson['success'] == 1) {
           print('Check ${isCheckOut ? 'out' : 'in'} remarks added: $remarks');
@@ -270,12 +268,10 @@ class GroupTimings extends StatelessWidget {
     } catch (e) {
       print(
           'Error while adding check ${isCheckOut ? 'out' : 'in'} remarks: $e');
-      if (!error) {
-        Provider.of<InternetAvailibility>(context)
-            .showNoInternetSnackBar(context);
-      }
+      Provider.of<InternetAvailabilityNotifier>(context, listen: false).value =
+          false;
       Future.delayed(const Duration(seconds: 1), () {
-        addRemarks(context, isCheckOut, remarks, true);
+        addRemarks(context, isCheckOut, remarks);
       });
     }
   }
@@ -311,32 +307,33 @@ class GroupTimings extends StatelessWidget {
               ),
             ],
           ),
-          Column(
-            children: <Widget>[
-              Text(
-                groupDetails.checkOut == '' ? '–' : groupDetails.checkOut,
-                style: Theme.of(context).textTheme.display1,
-              ),
-              Text('Checked out'),
-              SizedBox(
-                height: 28,
-                child: groupDetails.checkOut == ''
-                    ? null
-                    : IconButton(
-                        iconSize: 20,
-                        icon: groupDetails.remarksCheckout == ''
-                            ? const Icon(Icons.add_comment)
-                            : const Icon(Icons.comment),
-                        tooltip: groupDetails.remarks == ''
-                            ? 'Add check out remarks'
-                            : 'Edit check out remarks',
-                        onPressed: () {
-                          showRemarksDialog(context, true);
-                        },
-                      ),
-              ),
-            ],
-          ),
+          if (groupDetails.checkCheckOut == 1)
+            Column(
+              children: <Widget>[
+                Text(
+                  groupDetails.checkOut == '' ? '–' : groupDetails.checkOut,
+                  style: Theme.of(context).textTheme.display1,
+                ),
+                Text('Checked out'),
+                SizedBox(
+                  height: 28,
+                  child: groupDetails.checkOut == ''
+                      ? null
+                      : IconButton(
+                          iconSize: 20,
+                          icon: groupDetails.remarksCheckout == ''
+                              ? const Icon(Icons.add_comment)
+                              : const Icon(Icons.comment),
+                          tooltip: groupDetails.remarks == ''
+                              ? 'Add check out remarks'
+                              : 'Edit check out remarks',
+                          onPressed: () {
+                            showRemarksDialog(context, true);
+                          },
+                        ),
+                ),
+              ],
+            ),
         ],
       ),
     );

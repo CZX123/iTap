@@ -38,9 +38,8 @@ class GroupActions extends StatelessWidget {
   void takeAttendance(
     BuildContext context,
     bool takenWithWifi,
-    String code, [
-    bool error = false,
-  ]) async {
+    String code,
+  ) async {
     bool wifiIsLegit = false;
     if (takenWithWifi) wifiIsLegit = verifyWifi(context);
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
@@ -50,7 +49,7 @@ class GroupActions extends StatelessWidget {
       else
         print('Taking attendance with code: $code...');
       final checkOut = groupDetails.checkTakenToday == 0;
-      if (takenWithWifi && checkOut) {
+      if (takenWithWifi && checkOut && groupDetails.checkOutDialog == 1) {
         final result = await showCustomDialog<bool>(
           context: context,
           dialog: AlertDialog(
@@ -89,9 +88,8 @@ class GroupActions extends StatelessWidget {
           'checkOut': groupDetails.checkTakenToday == 0 ? 'true' : 'false',
         });
         if (response.statusCode == 200) {
-          if (error) {
-            Provider.of<InternetAvailibility>(context).removeSnackbar(context);
-          }
+          Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+              .value = true;
           print('Response: ${response.body}');
           final Map<String, dynamic> parsedJson = jsonDecode(response.body);
           if (parsedJson['success'] == 1) {
@@ -118,13 +116,11 @@ class GroupActions extends StatelessWidget {
         }
       } catch (e) {
         print('Error while taking attendance: $e');
-        if (!error) {
-          Provider.of<InternetAvailibility>(context)
-              .showNoInternetSnackBar(context);
-        }
+        Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+            .value = false;
         // Take attendance again if there is an error
         Future.delayed(const Duration(seconds: 1), () {
-          takeAttendance(context, takenWithWifi, code, true);
+          takeAttendance(context, takenWithWifi, code);
         });
       }
     } else if (takenWithWifi && !wifiIsLegit) {
@@ -132,7 +128,7 @@ class GroupActions extends StatelessWidget {
         context: context,
         dialog: AlertDialog(
           title: Text('Error'),
-          content: Text('You are not connected to the correct wifi'),
+          content: Text(Provider.of<NetworkNotifier>(context, listen: false).errorText + '.'),
           actions: <Widget>[
             FlatButton(
               child: Text('OK'),
@@ -180,7 +176,7 @@ class GroupActions extends StatelessWidget {
             context: context,
             dialog: AlertDialog(
               title: Text('Error'),
-              content: Text('Camera permission required'),
+              content: Text('Camera permission required.'),
               actions: <Widget>[
                 FlatButton(
                   child: Text('OK'),
@@ -239,9 +235,11 @@ class GroupActions extends StatelessWidget {
       );
     }
 
+    final bool showButtons = groupDetails.checkIn == '' ||
+        groupDetails.checkCheckOut == 1 && groupDetails.checkOut == '';
     Widget lastChild;
     List<Widget> children = [];
-    if (groupDetails.checkOut == '') {
+    if (showButtons) {
       if (groupDetails.codeEnabled == 1) {
         children.addAll([
           TypeCodeButton(
@@ -285,8 +283,7 @@ class GroupActions extends StatelessWidget {
 
     return Column(
       children: <Widget>[
-        if (groupDetails.checkOut == '' && groupDetails.wifiEnabled == 1)
-          WifiWidget(),
+        if (showButtons && groupDetails.wifiEnabled == 1) WifiWidget(),
         Padding(
           padding: const EdgeInsets.all(8),
           child: Wrap(
@@ -297,7 +294,7 @@ class GroupActions extends StatelessWidget {
         ),
         SizedBox(
           height:
-              children.length == 0 ? 36 : MediaQuery.of(context).padding.bottom,
+              children.length == 0 ? 24 : MediaQuery.of(context).padding.bottom,
         ),
       ],
     );

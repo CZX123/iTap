@@ -15,25 +15,17 @@ class CustomCrossFade extends StatelessWidget {
     Widget currentChild,
     List<Widget> previousChildren,
   ) {
-    Widget element = IgnorePointer(
-      child: Stack(
-        children: previousChildren,
-        alignment: Alignment.center,
-      ),
+    return Stack(
+      children: <Widget>[
+        ...previousChildren.map((child) {
+          return IgnorePointer(
+            child: child,
+          );
+        }).toList(),
+        if (currentChild != null) currentChild,
+      ],
+      alignment: Alignment.center,
     );
-    if (currentChild != null)
-      element = Stack(
-        children: <Widget>[
-          Positioned.fill(
-            child: ClipRect(
-              child: element,
-            ),
-          ),
-          currentChild,
-        ],
-        alignment: Alignment.center,
-      );
-    return element;
   }
 
   Widget transitionBuilder(Widget child, Animation<double> animation) {

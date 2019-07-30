@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'group.dart';
 import 'group_data.dart';
 import 'user_data.dart';
-import 'widgets/animated_placeholder.dart';
 import 'widgets/app_logo.dart';
 import 'widgets/custom_cross_fade.dart';
 import 'widgets/no_internet.dart';
@@ -19,20 +18,20 @@ class AttendancePage extends StatefulWidget {
 
 class _AttendancePageState extends State<AttendancePage>
     with WidgetsBindingObserver {
-  void getGroups([bool error = false]) {
+  void getGroups() async {
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
     if (userDataNotifier?.userKey == null) return;
-    http.post('https://itap.ml/app/index.php', body: {
-      'userkey': userDataNotifier.userKey,
-      'action': 'getGroups',
-      'org': userDataNotifier.org,
-      'username': userDataNotifier.username,
-      'method': 'flutter',
-    }).then((response) {
+    try {
+      final response = await http.post('https://itap.ml/app/index.php', body: {
+        'userkey': userDataNotifier.userKey,
+        'action': 'getGroups',
+        'org': userDataNotifier.org,
+        'username': userDataNotifier.username,
+        'method': 'flutter',
+      }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        if (error) {
-          Provider.of<InternetAvailibility>(context).removeSnackbar(context);
-        }
+        Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+            .value = true;
         final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
         final groupList = List<String>.from(jsonDecode(response.body));
         groupDataNotifier.groupList = groupList;
@@ -44,17 +43,15 @@ class _AttendancePageState extends State<AttendancePage>
       } else {
         print('Error ${response.statusCode} while getting groups');
       }
-    }).catchError((e) {
+    } catch (e) {
       print('Error while getting groups: $e');
-      if (!error) {
-        Provider.of<InternetAvailibility>(context)
-            .showNoInternetSnackBar(context);
-      }
+      Provider.of<InternetAvailabilityNotifier>(context, listen: false).value =
+          false;
       // Get groups again if there is an error
       Future.delayed(const Duration(seconds: 1), () {
-        getGroups(true);
+        getGroups();
       });
-    });
+    }
   }
 
   @override
@@ -150,15 +147,8 @@ class GroupsDropdown extends StatelessWidget {
     final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
     return Expanded(
       child: CustomCrossFade(
-        crossShrink: false,
-        duration: const Duration(milliseconds: 500),
         child: groupDataNotifier.groupList == null
-            ? const AnimatedPlaceholder(
-                height: 44,
-                constraints: BoxConstraints(
-                  maxWidth: 240,
-                ),
-              )
+            ? const SizedBox.shrink()
             : Container(
                 height: 44,
                 constraints: BoxConstraints(
