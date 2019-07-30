@@ -1,16 +1,21 @@
 # iTap
 
-A new Flutter project.
+Take attendance with a TAP!
 
-## Getting Started
+## TODOs
 
-This project is a starting point for a Flutter application.
+### Immediate Priority
+- Change take attendance behavior when online to show dialog instead of retrying
+- Check wifi as well when marking attendance with wifi
+- Add loading icon in login button after login to show feedback
+- Add loading icon in place of qr code if qr code fails to load
 
-A few resources to get you started if this is your first Flutter project:
+### Other features
+- Build change password into the app
+- Remove 'About iTap' webview and hardcode it directly into the app
+- Remove 'Attendance History' webview and include it directly into the app, through fetch request for json data, and the use of Data Tables
+- If possible, smoothly transition between the different stages (absent, present with check in, present with check out) through smoother animations (icon animations, translations).
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Long-term
+- Transfer all data from Weiqi's database to Firebase
+- If possible, use Google Forms API to directly input attendance data
