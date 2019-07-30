@@ -23,8 +23,10 @@ class NetworkNotifier extends ChangeNotifier {
   String _errorText;
   String get errorText => _errorText;
   set errorText(String errorText) {
-    _errorText = errorText;
-    notifyListeners();
+    if (errorText != _errorText) {
+      _errorText = errorText;
+      notifyListeners();
+    }
   }
 
   bool isNull() {
@@ -63,6 +65,7 @@ class WifiWidget extends StatefulWidget {
 }
 
 class _WifiWidgetState extends State<WifiWidget> {
+  bool permissionBeingRequested = false;
   String _wifiName;
   bool _connectedToWifi;
 
@@ -114,17 +117,22 @@ class _WifiWidgetState extends State<WifiWidget> {
               networkNotifier.errorText = 'Location is not turned on';
             else
               networkNotifier.errorText = 'Location permission denied';
-            PermissionHandler()
-                .requestPermissions([PermissionGroup.location]).then((value) {
-              if (value[PermissionGroup.location] != PermissionStatus.granted) {
-                if (status == PermissionStatus.disabled)
-                  networkNotifier.errorText = 'Location is not turned on';
-                else
-                  networkNotifier.errorText = 'Location permission denied';
-              } else {
-                recheckConnectivity();
-              }
-            });
+            if (!permissionBeingRequested) {
+              permissionBeingRequested = true;
+              PermissionHandler()
+                  .requestPermissions([PermissionGroup.location]).then((value) {
+                permissionBeingRequested = false;
+                if (value[PermissionGroup.location] !=
+                    PermissionStatus.granted) {
+                  if (status == PermissionStatus.disabled)
+                    networkNotifier.errorText = 'Location is not turned on';
+                  else
+                    networkNotifier.errorText = 'Location permission denied';
+                } else {
+                  recheckConnectivity();
+                }
+              });
+            }
           } else {
             recheckConnectivity();
           }
