@@ -224,52 +224,6 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.swap_vert),
-        onPressed: () {
-          if (userDataNotifier.checkData())
-            userDataNotifier.logout(context);
-          else {
-            http.post('https://itap.ml/app/index.php', body: {
-              'token': 'rQQYP51jI87DnteO',
-              'action': 'login',
-              'org': 'hci',
-              'username': 'kent',
-              'password': 'kent',
-            }).then((response) {
-              if (response.statusCode == 200) {
-                final Map<String, dynamic> userData = jsonDecode(response.body);
-                print('Login Details: $userData');
-                final int success = userData['success'];
-                if (success == 0) {
-                  showCustomDialog(
-                    context: context,
-                    dialog: AlertDialog(
-                      title: Text('Error'),
-                      content: Text(userData['error_message']),
-                      actions: <Widget>[
-                        FlatButton(
-                          child: Text('OK'),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        )
-                      ],
-                    ),
-                  );
-                } else if (success == 1) {
-                  Provider.of<UserDataNotifier>(context).updateData(
-                    userData['key'],
-                    'kent',
-                    userData['user'],
-                    'hci',
-                  );
-                }
-              }
-            });
-          }
-        },
-      ),
     );
   }
 }

@@ -35,7 +35,7 @@ class CustomCrossFade extends StatelessWidget {
     );
     if (crossShrink) {
       return ScaleTransition(
-        scale: Tween<double>(begin: .95, end: 1).animate(animation),
+        scale: Tween<double>(begin: .97, end: 1).animate(animation),
         child: element,
       );
     }
