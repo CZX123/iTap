@@ -29,14 +29,6 @@ final lightThemeData = ThemeData(
   textSelectionHandleColor: Colors.blue,
   canvasColor: Colors.grey[50],
   cardColor: Colors.blue[50], // Used for dropdown background
-  buttonTheme: ButtonThemeData(
-    alignedDropdown: true,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(6),
-    ),
-    buttonColor: Colors.blue[50],
-    textTheme: ButtonTextTheme.accent,
-  ),
   appBarTheme: AppBarTheme(
     color: Colors.blue,
   ),
@@ -47,6 +39,20 @@ final lightThemeData = ThemeData(
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
+    titleTextStyle: TextStyle(
+      color: Colors.black87,
+      fontFamily: 'Jost*',
+      fontSize: 20,
+      fontWeight: FontWeight.w500,
+    ),
+  ),
+  buttonTheme: ButtonThemeData(
+    alignedDropdown: true,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(6),
+    ),
+    buttonColor: Colors.blue[50],
+    textTheme: ButtonTextTheme.accent,
   ),
   textTheme: textTheme,
 );
@@ -63,17 +69,7 @@ final darkThemeData = ThemeData(
   scaffoldBackgroundColor: Colors.grey[900],
   canvasColor: Colors.grey[900],
   cardColor: Colors.grey[850], // Used for dropdown background
-  buttonTheme: ButtonThemeData(
-    alignedDropdown: true,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(6),
-    ),
-    buttonColor: Colors.blue[700],
-    textTheme: ButtonTextTheme.normal,
-  ),
-  appBarTheme: AppBarTheme(
-    color: Colors.grey[900]
-  ),
+  appBarTheme: AppBarTheme(color: Colors.grey[900]),
   iconTheme: IconThemeData(
     color: Colors.white,
   ),
@@ -81,6 +77,20 @@ final darkThemeData = ThemeData(
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
+    titleTextStyle: TextStyle(
+      color: Colors.white,
+      fontFamily: 'Jost*',
+      fontSize: 20,
+      fontWeight: FontWeight.w500,
+    ),
+  ),
+  buttonTheme: ButtonThemeData(
+    alignedDropdown: true,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(6),
+    ),
+    buttonColor: Colors.blue[700],
+    textTheme: ButtonTextTheme.normal,
   ),
   toggleableActiveColor: Colors.blue,
   textTheme: darkTextTheme,

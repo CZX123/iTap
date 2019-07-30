@@ -52,23 +52,31 @@ class GroupActions extends StatelessWidget {
       if (takenWithWifi && checkOut && groupDetails.checkOutDialog == 1) {
         final result = await showCustomDialog<bool>(
           context: context,
-          dialog: AlertDialog(
-            title: Text('Confirmation'),
-            content: Text('Are you sure you want to check out now?'),
-            actions: <Widget>[
-              FlatButton(
-                child: Text('NO'),
-                onPressed: () {
-                  Navigator.pop(context, false);
-                },
-              ),
-              FlatButton(
-                child: Text('YES'),
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
-              ),
-            ],
+          dialog: ButtonTheme(
+            child: AlertDialog(
+              title: Text('Confirmation'),
+              content: Text('Are you sure you want to check out now?'),
+              actions: <Widget>[
+                FlatButton(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text('NO'),
+                  onPressed: () {
+                    Navigator.pop(context, false);
+                  },
+                ),
+                FlatButton(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text('YES'),
+                  onPressed: () {
+                    Navigator.pop(context, true);
+                  },
+                ),
+              ],
+            ),
           ),
         );
         if (result == null || !result) {
@@ -102,6 +110,9 @@ class GroupActions extends StatelessWidget {
                 content: Text(parsedJson['error_message']),
                 actions: <Widget>[
                   FlatButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Text('OK'),
                     onPressed: () {
                       Navigator.pop(context);
@@ -128,9 +139,14 @@ class GroupActions extends StatelessWidget {
         context: context,
         dialog: AlertDialog(
           title: Text('Error'),
-          content: Text(Provider.of<NetworkNotifier>(context, listen: false).errorText + '.'),
+          content: Text(
+              Provider.of<NetworkNotifier>(context, listen: false).errorText +
+                  '.'),
           actions: <Widget>[
             FlatButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
               child: Text('OK'),
               onPressed: () {
                 Navigator.pop(context);
@@ -179,6 +195,9 @@ class GroupActions extends StatelessWidget {
               content: Text('Camera permission required.'),
               actions: <Widget>[
                 FlatButton(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   child: Text('OK'),
                   onPressed: () {
                     Navigator.pop(context);
@@ -211,6 +230,9 @@ class GroupActions extends StatelessWidget {
           content: Text('MAC address: ${networkNotifier.mac}'),
           actions: <Widget>[
             FlatButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
               child: Text('OK'),
               onPressed: () {
                 Navigator.pop(context);
@@ -355,12 +377,18 @@ class _TypeCodeDialogState extends State<TypeCodeDialog> {
       ),
       actions: <Widget>[
         FlatButton(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
           child: Text('CANCEL'),
           onPressed: () {
             Navigator.pop(context, null);
           },
         ),
         FlatButton(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
           child: Text('OK'),
           onPressed: () {
             _autovalidate = true;

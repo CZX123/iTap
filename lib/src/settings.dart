@@ -15,7 +15,7 @@ void launchURL(BuildContext context, String url) async {
         toolbarColor: Theme.of(context).primaryColor,
         enableUrlBarHiding: true,
         showPageTitle: true,
-        extraCustomTabs: <String>['org.mozilla.firefox', 'com.microsoft.emmx'],
+        extraCustomTabs: <String>['com.microsoft.emmx', 'org.mozilla.firefox'],
       ),
     );
   } catch (e) {

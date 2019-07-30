@@ -252,6 +252,9 @@ class GroupTimings extends StatelessWidget {
               content: Text(parsedJson['error_message']),
               actions: <Widget>[
                 FlatButton(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   child: Text('OK'),
                   onPressed: () {
                     Navigator.pop(context);
@@ -392,12 +395,18 @@ class _AddRemarksDialogState extends State<AddRemarksDialog> {
       ),
       actions: <Widget>[
         FlatButton(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
           child: Text('CANCEL'),
           onPressed: () {
             Navigator.pop(context, null);
           },
         ),
         FlatButton(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
           child: Text('OK'),
           onPressed: () {
             Navigator.pop(context, _textController.text);

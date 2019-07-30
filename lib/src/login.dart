@@ -135,6 +135,9 @@ class _LoginFormState extends State<LoginForm> {
                 content: Text(userData['error_message']),
                 actions: <Widget>[
                   FlatButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Text('OK'),
                     onPressed: () {
                       Navigator.pop(context);
@@ -320,6 +323,9 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
                 content: Text(userData['error_message']),
                 actions: <Widget>[
                   FlatButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Text('OK'),
                     onPressed: () {
                       Navigator.pop(context);
@@ -336,6 +342,9 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
                 content: Text(userData['error_message']),
                 actions: <Widget>[
                   FlatButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Text('OK'),
                     onPressed: () {
                       Navigator.pop(context);
