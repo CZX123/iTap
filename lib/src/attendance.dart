@@ -38,7 +38,8 @@ class _AttendancePageState extends State<AttendancePage>
         var selectedGroup = groupDataNotifier.selectedGroup;
         if (selectedGroup == null || !groupList.contains(selectedGroup)) {
           print('Groups: $groupList');
-          groupDataNotifier.selectedGroup = groupList[0];
+          groupDataNotifier.selectedGroup =
+              groupList.length == 0 ? null : groupList[0];
         }
       } else {
         print('Error ${response.statusCode} while getting groups');
@@ -148,7 +149,8 @@ class GroupsDropdown extends StatelessWidget {
     final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
     return Expanded(
       child: CustomCrossFade(
-        child: groupDataNotifier.groupList == null
+        child: groupDataNotifier.groupList == null ||
+                groupDataNotifier.groupList.length == 0
             ? const SizedBox.shrink()
             : Container(
                 height: 48,

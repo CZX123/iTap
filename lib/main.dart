@@ -112,14 +112,6 @@ class _HomeState extends State<Home> {
                       launchURL(context, notification.noLink);
                     },
                   ),
-                if (notification.remindButton != '')
-                  FlatButton(
-                    child: Text(notification.remindButton.toUpperCase()),
-                    onPressed: () {
-                      if (notification.id != 2) Navigator.pop(context);
-                      // TODO: Actually remind
-                    },
-                  ),
                 FlatButton(
                   child: Text(notification.yesButton.toUpperCase()),
                   onPressed: () {
@@ -191,7 +183,7 @@ class _HomeState extends State<Home> {
     _initNetwork();
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateNetwork);
-    getNotification();
+    if (!_loaded) getNotification();
   }
 
   @override

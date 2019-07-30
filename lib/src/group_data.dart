@@ -19,6 +19,7 @@ class GroupDataNotifier extends ChangeNotifier {
   String _selectedGroup;
   String get selectedGroup => _selectedGroup;
   set selectedGroup(String selectedGroup) {
+    if (selectedGroup == _selectedGroup) return;
     _selectedGroup = selectedGroup;
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('selectedGroup', selectedGroup);

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
-//import 'package:webview_flutter/webview_flutter.dart';
 import 'theme.dart';
 import 'user_data.dart';
 import 'widgets/custom_cross_fade.dart';
@@ -31,6 +30,7 @@ class SettingsDrawer extends StatefulWidget {
 }
 
 class _SettingsDrawerState extends State<SettingsDrawer> {
+  bool _showAccountsPage = false;
   String _userKey;
   String _fullName;
   String _username;
@@ -41,22 +41,18 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
     final darkModeNotifier = Provider.of<DarkModeNotifier>(context);
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
 
-    void _updateAppBar() {
-      Brightness statusBarBrightness;
-      if (Provider.of<DarkModeNotifier>(context).value) {
-        statusBarBrightness = Brightness.dark;
-      } else {
-        statusBarBrightness = Brightness.light;
-      }
-      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark
-          .copyWith(statusBarBrightness: statusBarBrightness));
-    }
-
     if (userDataNotifier.checkData()) {
+      _showAccountsPage = true;
       _userKey = userDataNotifier.userKey;
       _fullName = userDataNotifier.fullName;
       _username = userDataNotifier.username;
       _org = userDataNotifier.org;
+    } else {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        setState(() {
+          _showAccountsPage = false;
+        });
+      });
     }
 
     return SingleChildScrollView(
@@ -68,7 +64,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             CustomCrossFade(
-              child: userDataNotifier.checkData()
+              child: _showAccountsPage
                   ? AccountPage(
                       userKey: _userKey,
                       fullName: _fullName,
@@ -88,18 +84,6 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                     onPressed: () {
                       Navigator.pop(context);
                       launchURL(context, 'https://itap.ml/app/about/?v=2.0');
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //       builder: (context) => WebViewPage(
-                      //             title: 'About iTap',
-                      //             url: 'https://itap.ml/app/about/?v=2.0',
-                      //           )),
-                      // ).whenComplete(
-                      //   () => Future.delayed(Duration(milliseconds: 100)).then(
-                      //     (_) => _updateAppBar(),
-                      //   ),
-                      // );
                     },
                   ),
                   IconButton(
@@ -136,9 +120,8 @@ class EmptyPage extends StatelessWidget {
     return Container(
       constraints: BoxConstraints(
         minHeight: MediaQuery.of(context).size.height -
-            MediaQuery.of(context).padding.top -
             MediaQuery.of(context).padding.bottom -
-            24,
+            64,
       ),
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
       child: Column(
@@ -202,124 +185,90 @@ class _AccountPageState extends State<AccountPage> {
   Widget build(BuildContext context) {
     final userDataNotifier =
         Provider.of<UserDataNotifier>(context, listen: false);
-    return Column(
-      children: <Widget>[
-        Container(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            MediaQuery.of(context).padding.top + 24,
-            16,
-            16,
-          ),
-          color: Theme.of(context).appBarTheme.color,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              CircleAvatar(
-                radius: 36,
-                backgroundColor: Colors.white70,
-                child: Text(
-                  widget.fullName[0],
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w500,
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: MediaQuery.of(context).size.height -
+            MediaQuery.of(context).padding.bottom -
+            64,
+      ),
+      child: Column(
+        children: <Widget>[
+          Container(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              MediaQuery.of(context).padding.top + 24,
+              16,
+              16,
+            ),
+            color: Theme.of(context).appBarTheme.color,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 36,
+                  backgroundColor: Colors.white70,
+                  child: Text(
+                    widget.fullName[0],
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(
-                height: 16,
-                width: double.infinity,
-              ),
-              Text(
-                widget.fullName,
-                style: Theme.of(context).textTheme.body2.copyWith(
-                      color: Colors.white,
-                    ),
-              ),
-              const SizedBox(
-                height: 2,
-              ),
-              Text(
-                widget.username + '@' + widget.org,
-                style: TextStyle(
-                  color: Colors.white,
+                const SizedBox(
+                  height: 16,
+                  width: double.infinity,
                 ),
-              ),
-            ],
+                Text(
+                  widget.fullName,
+                  style: Theme.of(context).textTheme.body2.copyWith(
+                        color: Colors.white,
+                      ),
+                ),
+                const SizedBox(
+                  height: 2,
+                ),
+                Text(
+                  widget.username + '@' + widget.org,
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 1,
-          width: double.infinity,
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white12
-              : Colors.transparent,
-        ),
-        const SizedBox(
-          height: 8,
-        ),
-        ListTile(
-          leading: Icon(Icons.account_box),
-          title: Text('Attendance History'),
-          onTap: () {
-            Navigator.pop(context);
-            launchURL(
-              context,
-              'https://itap.ml/app/viewattendance/?token=${widget.userKey}',
-            );
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (context) {
-            //       return WebViewPage(
-            //         title: 'Attendance History',
-            //         url:
-            //             'https://itap.ml/app/viewattendance/?token=${widget.userKey}',
-            //       );
-            //     },
-            //   ),
-            // );
-          },
-        ),
-        ListTile(
-          leading: Icon(Icons.exit_to_app),
-          title: Text('Logout'),
-          onTap: () {
-            Navigator.pop(context);
-            userDataNotifier.logout(context);
-          },
-        ),
-      ],
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 1,
+            width: double.infinity,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white12
+                : Colors.transparent,
+          ),
+          const SizedBox(
+            height: 8,
+          ),
+          ListTile(
+            leading: Icon(Icons.account_box),
+            title: Text('Attendance History'),
+            onTap: () {
+              Navigator.pop(context);
+              launchURL(
+                context,
+                'https://itap.ml/app/viewattendance/?token=${widget.userKey}',
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.exit_to_app),
+            title: Text('Logout'),
+            onTap: () {
+              Navigator.pop(context);
+              userDataNotifier.logout(context);
+            },
+          ),
+        ],
+      ),
     );
   }
 }
-
-// class WebViewPage extends StatelessWidget {
-//   final String title;
-//   final String url;
-//   const WebViewPage({
-//     Key key,
-//     @required this.title,
-//     @required this.url,
-//   }) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text(title),
-//       ),
-//       body: Column(
-//         children: <Widget>[
-//           Expanded(
-//             child: WebView(
-//               javascriptMode: JavascriptMode.unrestricted,
-//               initialUrl: url,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

@@ -7,7 +7,6 @@ class NotificationDetails {
   final String noLink;
   final String yesButton;
   final String noButton;
-  final String remindButton;
 
   const NotificationDetails({
     this.id,
@@ -18,7 +17,6 @@ class NotificationDetails {
     this.noLink,
     this.yesButton,
     this.noButton,
-    this.remindButton,
   });
 
   factory NotificationDetails.fromJson(Map<String, dynamic> parsedJson) {
@@ -31,12 +29,11 @@ class NotificationDetails {
       noLink: parsedJson['linkfornoButton'],
       yesButton: parsedJson['yesButton'],
       noButton: parsedJson['noButton'],
-      remindButton: parsedJson['remindButton'],
     );
   }
 
   @override
   String toString() {
-    return 'NotificationDetails(id: $id, disable: $disable, title: $title, message: $message, yesLink: $yesLink, noLink: $noLink, yesButton: $yesButton, noButton: $noButton, remindButton: $remindButton)';
+    return 'NotificationDetails(id: $id, disable: $disable, title: $title, message: $message, yesLink: $yesLink, noLink: $noLink, yesButton: $yesButton, noButton: $noButton)';
   }
 }

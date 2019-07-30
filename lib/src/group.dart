@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'group_actions.dart';
 import 'group_data.dart';
+import 'settings.dart';
 import 'user_data.dart';
 import 'widgets/custom_cross_fade.dart';
 import 'widgets/custom_dialog.dart';
@@ -20,6 +21,7 @@ class GroupPage extends StatefulWidget {
 class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
   String _previousGroup;
   GroupDetails _groupDetails;
+  bool _empty = false;
   bool loading = false;
 
   void getGroupDetails([
@@ -27,8 +29,22 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
   ]) async {
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
     final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
+    if (groupDataNotifier?.groupList?.length == 0) {
+      if (!_empty) {
+        setState(() {
+          _empty = true;
+        });
+      }
+      return;
+    } else if (_empty) {
+      setState(() {
+        _empty = false;
+      });
+    }
     if (userDataNotifier?.userKey == null ||
-        groupDataNotifier?.selectedGroup == null) return;
+        groupDataNotifier?.selectedGroup == null) {
+      return;
+    }
     Timer timer;
     if (!lifecycleChange) {
       setState(() {
@@ -85,7 +101,8 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final groupDataNotifier = Provider.of<GroupDataNotifier>(context);
-    if (_previousGroup != groupDataNotifier.selectedGroup) {
+    if (_previousGroup == null ||
+        _previousGroup != groupDataNotifier.selectedGroup) {
       _previousGroup = groupDataNotifier.selectedGroup;
       getGroupDetails();
     }
@@ -126,44 +143,82 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
     final topBarHeight = 80; // hardcoded
     final present = _groupDetails?.checkTakenToday == 0;
     return CustomCrossFade(
-      child: _groupDetails == null
-          ? Container(
+      child: _empty
+          ? ConstrainedBox(
               constraints: BoxConstraints(
                 minHeight: windowHeight - topPadding - topBarHeight,
               ),
-              alignment: Alignment.center,
-              child: AnimatedOpacity(
-                opacity: loading ? 1 : 0,
-                duration: const Duration(milliseconds: 500),
-                child: CircularProgressIndicator(),
+              child: GestureDetector(
+                onTap: () {
+                  // Ignore this
+                  launchURL(context, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(
+                      Icons.category,
+                      size: 96,
+                      color: Theme.of(context).hintColor,
+                    ),
+                    const SizedBox(
+                      height: 36,
+                    ),
+                    Text(
+                      'No events open for attendance taking',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).hintColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                  ],
+                ),
               ),
             )
-          : ConstrainedBox(
-              key: ObjectKey(_groupDetails),
-              constraints: BoxConstraints(
-                minHeight: windowHeight - topPadding - topBarHeight,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  SizedBox(),
-                  GroupStatus(
-                    groupDetails: _groupDetails,
-                    present: present,
+          : _groupDetails == null
+              ? Container(
+                  constraints: BoxConstraints(
+                    minHeight: windowHeight - topPadding - topBarHeight,
                   ),
-                  if (present)
-                    GroupTimings(
-                      groupDetails: _groupDetails,
-                      getGroupDetails: getGroupDetails,
-                    ),
-                  GroupActions(
-                    groupDetails: _groupDetails,
-                    getGroupDetails: getGroupDetails,
+                  alignment: Alignment.center,
+                  child: AnimatedOpacity(
+                    opacity: loading ? 1 : 0,
+                    duration: const Duration(milliseconds: 500),
+                    child: CircularProgressIndicator(),
                   ),
-                ],
-              ),
-            ),
+                )
+              : ConstrainedBox(
+                  key: ObjectKey(_groupDetails),
+                  constraints: BoxConstraints(
+                    minHeight: windowHeight - topPadding - topBarHeight,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      const SizedBox.shrink(),
+                      GroupStatus(
+                        groupDetails: _groupDetails,
+                        present: present,
+                      ),
+                      if (present)
+                        GroupTimings(
+                          groupDetails: _groupDetails,
+                          getGroupDetails: getGroupDetails,
+                        ),
+                      GroupActions(
+                        groupDetails: _groupDetails,
+                        getGroupDetails: getGroupDetails,
+                      ),
+                    ],
+                  ),
+                ),
     );
   }
 }

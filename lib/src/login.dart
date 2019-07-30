@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'settings.dart';
 import 'user_data.dart';
 import 'widgets/app_logo.dart';
 import 'widgets/custom_cross_fade.dart';
@@ -153,7 +154,9 @@ class _LoginFormState extends State<LoginForm> {
               userData['user'],
               _org,
             );
-          } // TODO: if success == 2
+          } else if (success == 2) {
+            launchURL(context, userData['link']);
+          }
         } else {
           print('Error ${response.statusCode} while logging in');
         }
