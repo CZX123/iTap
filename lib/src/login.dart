@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
       child: Container(
         padding: EdgeInsets.fromLTRB(
           0,
-          MediaQuery.of(context).padding.top + 20,
+          MediaQuery.of(context).padding.top + 16,
           0,
           0,
         ),
@@ -39,9 +39,7 @@ class _LoginPageState extends State<LoginPage> {
           children: <Widget>[
             const TopBar(),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-              ),
+              padding: const EdgeInsets.all(20),
               child: ValueListenableBuilder<FormType>(
                 valueListenable: _formTypeNotifier,
                 builder: (context, formType, child) {
@@ -57,9 +55,7 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
             ),
-            const SizedBox(
-              height: 24,
-            ),
+            const SizedBox.shrink(),
           ],
         ),
       ),
@@ -73,10 +69,13 @@ class TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 72,
-      padding: const EdgeInsets.only(bottom: 24),
+      height: 56,
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: <Widget>[
+          const SizedBox(
+            width: 4,
+          ),
           IconButton(
             icon: Icon(Icons.menu),
             onPressed: () => Scaffold.of(context).openDrawer(),
@@ -151,7 +150,7 @@ class _LoginFormState extends State<LoginForm> {
               userData['user'],
               _org,
             );
-          } // if success == 2
+          } // TODO: if success == 2
         } else {
           print('Error ${response.statusCode} while logging in');
         }
@@ -160,9 +159,7 @@ class _LoginFormState extends State<LoginForm> {
         Provider.of<InternetAvailabilityNotifier>(context, listen: false)
             .value = false;
         // Login again if there is an error
-        Future.delayed(const Duration(seconds: 1), () {
-          _submitForm();
-        });
+        Future.delayed(const Duration(seconds: 1), _submitForm);
       }
     } else
       setState(() {
@@ -356,9 +353,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
         Provider.of<InternetAvailabilityNotifier>(context, listen: false)
             .value = false;
         // Reset password again if there is an error
-        Future.delayed(const Duration(seconds: 1), () {
-          _submitForm();
-        });
+        Future.delayed(const Duration(seconds: 1), _submitForm);
       }
     } else
       setState(() {

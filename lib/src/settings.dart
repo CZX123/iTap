@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
+//import 'package:webview_flutter/webview_flutter.dart';
 import 'theme.dart';
 import 'user_data.dart';
 import 'widgets/custom_cross_fade.dart';
+
+void launchURL(BuildContext context, String url) async {
+  try {
+    await launch(
+      url,
+      option: new CustomTabsOption(
+        toolbarColor: Theme.of(context).primaryColor,
+        enableUrlBarHiding: true,
+        showPageTitle: true,
+        extraCustomTabs: <String>['org.mozilla.firefox', 'com.microsoft.emmx'],
+      ),
+    );
+  } catch (e) {
+    debugPrint(e);
+  }
+}
 
 class SettingsDrawer extends StatefulWidget {
   const SettingsDrawer({Key key}) : super(key: key);
@@ -70,18 +87,19 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                     icon: Icon(Icons.info),
                     onPressed: () {
                       Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => WebViewPage(
-                                  title: 'About iTap',
-                                  url: 'https://itap.ml/app/about/?v=2.0',
-                                )),
-                      ).whenComplete(
-                        () => Future.delayed(Duration(milliseconds: 100)).then(
-                          (_) => _updateAppBar(),
-                        ),
-                      );
+                      launchURL(context, 'https://itap.ml/app/about/?v=2.0');
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //       builder: (context) => WebViewPage(
+                      //             title: 'About iTap',
+                      //             url: 'https://itap.ml/app/about/?v=2.0',
+                      //           )),
+                      // ).whenComplete(
+                      //   () => Future.delayed(Duration(milliseconds: 100)).then(
+                      //     (_) => _updateAppBar(),
+                      //   ),
+                      // );
                     },
                   ),
                   IconButton(
@@ -246,18 +264,22 @@ class _AccountPageState extends State<AccountPage> {
           title: Text('Attendance History'),
           onTap: () {
             Navigator.pop(context);
-            Navigator.push(
+            launchURL(
               context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return WebViewPage(
-                    title: 'Attendance History',
-                    url:
-                        'https://itap.ml/app/viewattendance/?token=${widget.userKey}',
-                  );
-                },
-              ),
+              'https://itap.ml/app/viewattendance/?token=${widget.userKey}',
             );
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (context) {
+            //       return WebViewPage(
+            //         title: 'Attendance History',
+            //         url:
+            //             'https://itap.ml/app/viewattendance/?token=${widget.userKey}',
+            //       );
+            //     },
+            //   ),
+            // );
           },
         ),
         ListTile(
@@ -273,31 +295,31 @@ class _AccountPageState extends State<AccountPage> {
   }
 }
 
-class WebViewPage extends StatelessWidget {
-  final String title;
-  final String url;
-  const WebViewPage({
-    Key key,
-    @required this.title,
-    @required this.url,
-  }) : super(key: key);
+// class WebViewPage extends StatelessWidget {
+//   final String title;
+//   final String url;
+//   const WebViewPage({
+//     Key key,
+//     @required this.title,
+//     @required this.url,
+//   }) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: WebView(
-              javascriptMode: JavascriptMode.unrestricted,
-              initialUrl: url,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(title),
+//       ),
+//       body: Column(
+//         children: <Widget>[
+//           Expanded(
+//             child: WebView(
+//               javascriptMode: JavascriptMode.unrestricted,
+//               initialUrl: url,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }

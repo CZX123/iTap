@@ -48,9 +48,7 @@ class _AttendancePageState extends State<AttendancePage>
       Provider.of<InternetAvailabilityNotifier>(context, listen: false).value =
           false;
       // Get groups again if there is an error
-      Future.delayed(const Duration(seconds: 1), () {
-        getGroups();
-      });
+      Future.delayed(const Duration(seconds: 1), getGroups);
     }
   }
 
@@ -96,7 +94,7 @@ class _AttendancePageState extends State<AttendancePage>
       child: Column(
         children: <Widget>[
           SizedBox(
-            height: MediaQuery.of(context).padding.top + 20,
+            height: MediaQuery.of(context).padding.top + 16,
           ),
           TopBar(),
           const SizedBox(
@@ -118,6 +116,9 @@ class TopBar extends StatelessWidget {
       height: 48,
       child: Row(
         children: <Widget>[
+          const SizedBox(
+            width: 4,
+          ),
           IconButton(
             icon: Icon(Icons.menu),
             onPressed: () => Scaffold.of(context).openDrawer(),
@@ -127,11 +128,11 @@ class TopBar extends StatelessWidget {
           ),
           const AppLogo(),
           const SizedBox(
-            width: 56,
+            width: 48,
           ),
           GroupsDropdown(),
           const SizedBox(
-            width: 16,
+            width: 12,
           ),
         ],
       ),
@@ -150,7 +151,7 @@ class GroupsDropdown extends StatelessWidget {
         child: groupDataNotifier.groupList == null
             ? const SizedBox.shrink()
             : Container(
-                height: 44,
+                height: 48,
                 constraints: BoxConstraints(
                   maxWidth: 240,
                 ),

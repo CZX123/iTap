@@ -123,7 +123,7 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
       // This is to prevent the negative box constraints errror
     }
     final topPadding = MediaQuery.of(context).padding.top;
-    final topBarHeight = 84; // hardcoded
+    final topBarHeight = 80; // hardcoded
     final present = _groupDetails?.checkTakenToday == 0;
     return CustomCrossFade(
       child: _groupDetails == null

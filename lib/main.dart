@@ -1,22 +1,23 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'src/attendance.dart';
 import 'src/group_data.dart';
 import 'src/login.dart';
+import 'src/notification.dart';
 import 'src/settings.dart';
 import 'src/theme.dart';
 import 'src/user_data.dart';
 import 'src/widgets/custom_cross_fade.dart';
+import 'src/widgets/custom_dialog.dart';
 import 'src/widgets/no_internet.dart';
 import 'src/wifi.dart';
-import 'package:http/http.dart' as http; // Remove when done testing
-import 'dart:convert'; // Remove when done testing
-import 'src/widgets/custom_dialog.dart'; // Remove when done testing
 
 void main() {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -85,6 +86,58 @@ class _HomeState extends State<Home> {
   StreamSubscription<ConnectivityResult> _connectivitySubscription;
   bool _loaded = false;
 
+  void getNotification() async {
+    try {
+      final response = await http.post('https://itap.ml/app/index.php', body: {
+        'action': 'getNotification',
+        'v': Platform.isAndroid ? 'android2.0' : 'ios2.0'
+      }).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> parsedJson = jsonDecode(response.body);
+        final notification = NotificationDetails.fromJson(parsedJson);
+        print(notification);
+        if (notification.id != 0) {
+          showCustomDialog(
+            context: context,
+            barrierDismissible: notification.id != 2,
+            dialog: AlertDialog(
+              title: Text(notification.title),
+              content: Text(notification.message),
+              actions: <Widget>[
+                if (notification.noButton != '')
+                  FlatButton(
+                    child: Text(notification.noButton.toUpperCase()),
+                    onPressed: () {
+                      if (notification.id != 2) Navigator.pop(context);
+                      launchURL(context, notification.noLink);
+                    },
+                  ),
+                if (notification.remindButton != '')
+                  FlatButton(
+                    child: Text(notification.remindButton.toUpperCase()),
+                    onPressed: () {
+                      if (notification.id != 2) Navigator.pop(context);
+                      // TODO: Actually remind
+                    },
+                  ),
+                FlatButton(
+                  child: Text(notification.yesButton.toUpperCase()),
+                  onPressed: () {
+                    if (notification.id != 2) Navigator.pop(context);
+                    launchURL(context, notification.yesLink);
+                  },
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      Provider.of<InternetAvailabilityNotifier>(context).value = false;
+      Future.delayed(const Duration(seconds: 1), getNotification);
+    }
+  }
+
   void _initNetwork() async {
     ConnectivityResult result;
     try {
@@ -138,6 +191,7 @@ class _HomeState extends State<Home> {
     _initNetwork();
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateNetwork);
+    getNotification();
   }
 
   @override

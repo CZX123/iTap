@@ -26,6 +26,7 @@ dependencies:
   provider: ^3.0.0+1
   qr_flutter: ^2.1.0+55
   shared_preferences: ^0.5.3+4
+  flutter_custom_tabs: ^0.6.0
   webview_flutter: ^0.3.10+3
   permission_handler:
     git:

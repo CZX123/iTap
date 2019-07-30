@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 Future<T> showCustomDialog<T>({
   @required BuildContext context,
   @required Widget dialog,
+  bool barrierDismissible = true,
 }) {
   return showGeneralDialog<T>(
     context: context,
     barrierLabel: 'Dismiss',
-    barrierDismissible: true,
+    barrierDismissible: barrierDismissible,
     transitionDuration: Duration(milliseconds: 200),
     barrierColor: Colors.black.withOpacity(0.5),
     transitionBuilder: (

@@ -60,9 +60,7 @@ class _GenerateCodePageState extends State<GenerateCodePage>
       print('Error while generating code: $e');
       Provider.of<InternetAvailabilityNotifier>(context, listen: false).value =
           false;
-      Future.delayed(const Duration(seconds: 1), () {
-        getCode();
-      });
+      Future.delayed(const Duration(seconds: 1), getCode);
     }
   }
 
