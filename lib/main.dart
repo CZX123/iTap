@@ -104,7 +104,7 @@ class _HomeState extends State<Home> {
               title: Text(notification.title),
               content: Text(notification.message),
               actions: <Widget>[
-                if (notification.noButton != '')
+                if (notification.id != 2 && notification.noButton != '')
                   FlatButton(
                     child: Text(notification.noButton.toUpperCase()),
                     onPressed: () {
