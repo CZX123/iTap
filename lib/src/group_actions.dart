@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:barcode_scan/barcode_scan.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +15,7 @@ import 'wifi.dart';
 import 'widgets/custom_dialog.dart';
 
 class GroupActions extends StatelessWidget {
+  static final _connectivity = Connectivity();
   final GroupDetails groupDetails;
   final VoidCallback getGroupDetails;
   const GroupActions({
@@ -22,15 +24,41 @@ class GroupActions extends StatelessWidget {
     @required this.getGroupDetails,
   }) : super(key: key);
 
-  bool verifyWifi(BuildContext context) {
-    final networkNotifier =
-        Provider.of<NetworkNotifier>(context, listen: false);
+  Future<bool> verifyWifi(BuildContext context) async {
+    ConnectivityResult result;
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      print('Error while initialising network: $e');
+      return false;
+    }
+    if (result != ConnectivityResult.wifi) {
+      Provider.of<NetworkNotifier>(context, listen: false)
+          .updateNetwork(result);
+      return false;
+    }
+    String name;
+    String mac;
+    try {
+      name = await _connectivity.getWifiName();
+    } catch (e) {
+      print('Failed to get wifi name: $e');
+      return false;
+    }
+    try {
+      mac = await _connectivity.getWifiBSSID();
+    } catch (e) {
+      print('Failed to get mac address: $e');
+      return false;
+    }
+    Provider.of<NetworkNotifier>(context, listen: false)
+        .updateNetwork(result, name, mac);
     // The logic here may be confusing, but it works.
     // Everything here is just a negation of the original logic.
     return !groupDetails.wifiList.every((wifiDetails) {
-      return wifiDetails.ssid != networkNotifier.name ||
+      return wifiDetails.ssid != name ||
           wifiDetails.mac.substring(1, wifiDetails.macDigits) !=
-                  networkNotifier.mac.substring(1, wifiDetails.macDigits) &&
+                  mac.substring(1, wifiDetails.macDigits) &&
               wifiDetails.mac != 'all';
     });
   }
@@ -41,7 +69,7 @@ class GroupActions extends StatelessWidget {
     String code,
   ) async {
     bool wifiIsLegit = false;
-    if (takenWithWifi) wifiIsLegit = verifyWifi(context);
+    if (takenWithWifi) wifiIsLegit = await verifyWifi(context);
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
     if (takenWithWifi && wifiIsLegit || code != '') {
       if (takenWithWifi)
@@ -52,31 +80,29 @@ class GroupActions extends StatelessWidget {
       if (takenWithWifi && checkOut && groupDetails.checkOutDialog == 1) {
         final result = await showCustomDialog<bool>(
           context: context,
-          dialog: ButtonTheme(
-            child: AlertDialog(
-              title: Text('Confirmation'),
-              content: Text('Are you sure you want to check out now?'),
-              actions: <Widget>[
-                FlatButton(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text('NO'),
-                  onPressed: () {
-                    Navigator.pop(context, false);
-                  },
+          dialog: AlertDialog(
+            title: Text('Confirmation'),
+            content: Text('Are you sure you want to check out now?'),
+            actions: <Widget>[
+              FlatButton(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                FlatButton(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text('YES'),
-                  onPressed: () {
-                    Navigator.pop(context, true);
-                  },
+                child: Text('NO'),
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+              ),
+              FlatButton(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
                 ),
-              ],
-            ),
+                child: Text('YES'),
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+              ),
+            ],
           ),
         );
         if (result == null || !result) {
@@ -127,12 +153,30 @@ class GroupActions extends StatelessWidget {
         }
       } catch (e) {
         print('Error while taking attendance: $e');
-        Provider.of<InternetAvailabilityNotifier>(context, listen: false)
-            .value = false;
-        // Take attendance again if there is an error
-        Future.delayed(const Duration(seconds: 1), () {
-          takeAttendance(context, takenWithWifi, code);
-        });
+        showCustomDialog(
+          context: context,
+          dialog: AlertDialog(
+            title: const Text('Error'),
+            content: const Text('No Internet.'),
+            actions: <Widget>[
+              FlatButton(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+        // Provider.of<InternetAvailabilityNotifier>(context, listen: false)
+        //     .value = false;
+        // // Take attendance again if there is an error
+        // Future.delayed(const Duration(seconds: 1), () {
+        //   takeAttendance(context, takenWithWifi, code);
+        // });
       }
     } else if (takenWithWifi && !wifiIsLegit) {
       showCustomDialog(

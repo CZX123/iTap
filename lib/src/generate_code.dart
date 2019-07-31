@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -23,6 +24,8 @@ class _GenerateCodePageState extends State<GenerateCodePage>
   final _codeNotifier = ValueNotifier<String>(null);
   String _nextCode;
   int _interval;
+  bool _loading = false;
+  Timer _timer;
 
   void getCode() async {
     try {
@@ -35,6 +38,7 @@ class _GenerateCodePageState extends State<GenerateCodePage>
         'username': userDataNotifier.username,
       }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
+        _timer?.cancel();
         Provider.of<InternetAvailabilityNotifier>(context, listen: false)
             .value = true;
         Map<String, dynamic> parsedJson = jsonDecode(response.body);
@@ -66,12 +70,21 @@ class _GenerateCodePageState extends State<GenerateCodePage>
 
   void animationListener(AnimationStatus status) {
     if (_animationController.value == 1) {
-      _codeNotifier.value = _nextCode;
-      _animationController.value = 0;
-      _animationController.animateTo(
-        1,
-        duration: Duration(seconds: _interval),
-      );
+      if (_codeNotifier.value != _nextCode) {
+        _codeNotifier.value = _nextCode;
+        _animationController.value = 0;
+        _animationController.animateTo(
+          1,
+          duration: Duration(seconds: _interval),
+        );
+      } else {
+        _codeNotifier.value = null;
+        _timer = Timer(const Duration(milliseconds: 800), () {
+          setState(() {
+            _loading = true;
+          });
+        });
+      }
       getCode();
     }
   }
@@ -81,11 +94,11 @@ class _GenerateCodePageState extends State<GenerateCodePage>
     super.initState();
     _animationController = AnimationController(vsync: this)
       ..addStatusListener(animationListener);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+    _timer = Timer(const Duration(milliseconds: 800), () {
+      setState(() {
+        _loading = true;
+      });
+    });
     getCode();
   }
 
@@ -124,6 +137,12 @@ class _GenerateCodePageState extends State<GenerateCodePage>
                                 windowHeight - topPadding - appBarHeight - 48,
                           ),
                           width: double.infinity,
+                          alignment: Alignment.center,
+                          child: AnimatedOpacity(
+                            opacity: _loading ? 1 : 0,
+                            duration: const Duration(milliseconds: 500),
+                            child: CircularProgressIndicator(),
+                          ),
                         )
                       : Container(
                           key: ValueKey(value),

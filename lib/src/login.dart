@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -108,11 +109,18 @@ class _LoginFormState extends State<LoginForm> {
   String _org;
   String _username;
   String _password;
+  Timer _timer;
+  bool _loading = false;
 
   void _submitForm() async {
     FormState state = _formKey.currentState;
     if (state.validate()) {
       state.save();
+      _timer = Timer(const Duration(milliseconds: 500), () {
+        setState(() {
+          _loading = true;
+        });
+      });
       try {
         final response =
             await http.post('https://itap.ml/app/index.php', body: {
@@ -122,6 +130,10 @@ class _LoginFormState extends State<LoginForm> {
           'username': _username,
           'password': _password,
         }).timeout(const Duration(seconds: 10));
+        _timer.cancel();
+        if (_loading) setState(() {
+          _loading = false;
+        });
         if (response.statusCode == 200) {
           Provider.of<InternetAvailabilityNotifier>(context, listen: false)
               .value = true;
@@ -258,8 +270,23 @@ class _LoginFormState extends State<LoginForm> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text('Login'),
-                onPressed: _submitForm,
+                child: CustomCrossFade(
+                  child: _loading
+                      ? SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation(
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white
+                                  : Colors.blue,
+                            ),
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Login'),
+                ),
+                onPressed: _loading ? () {} : _submitForm,
               ),
               const SizedBox(
                 width: 12,
@@ -298,12 +325,18 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
   final _usernameNode = FocusNode();
   String _org;
   String _username;
+  Timer _timer;
+  bool _loading = false;
 
   void _submitForm() async {
-    print('yay?');
     FormState state = _formKey.currentState;
     if (state.validate()) {
       state.save();
+      _timer = Timer(const Duration(milliseconds: 500), () {
+        setState(() {
+          _loading = true;
+        });
+      });
       try {
         final response =
             await http.post('https://itap.ml/app/index.php', body: {
@@ -312,6 +345,10 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
           'org': _org,
           'username': _username,
         }).timeout(const Duration(seconds: 10));
+        _timer.cancel();
+        if (_loading) setState(() {
+          _loading = false;
+        });
         if (response.statusCode == 200) {
           Provider.of<InternetAvailabilityNotifier>(context, listen: false)
               .value = true;
@@ -440,8 +477,23 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text('Reset'),
-                onPressed: _submitForm,
+                child: CustomCrossFade(
+                  child: _loading
+                      ? SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation(
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white
+                                  : Colors.blue,
+                            ),
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Reset'),
+                ),
+                onPressed: _loading ? () {} : _submitForm,
               ),
               const SizedBox(
                 width: 12,

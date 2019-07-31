@@ -5,10 +5,10 @@ Take attendance with a TAP!
 ## TODOs
 
 ### Immediate Priority
-- Change take attendance behavior when online to show dialog instead of retrying
-- Check wifi as well when marking attendance with wifi
-- Add loading icon in login button after login to show feedback
-- Add loading icon in place of qr code if qr code fails to load
+- ~~Change take attendance behavior when online to show dialog instead of retrying~~
+- ~~Check wifi as well when marking attendance with wifi~~
+- ~~Add loading icon in login button after login to show feedback~~
+- ~~Add loading icon in place of qr code if qr code fails to load~~
 
 ### Other features
 - Build change password into the app

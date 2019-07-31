@@ -49,9 +49,11 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
       _org = userDataNotifier.org;
     } else {
       Future.delayed(const Duration(milliseconds: 300), () {
-        setState(() {
-          _showAccountsPage = false;
-        });
+        if (mounted) {
+          setState(() {
+            _showAccountsPage = false;
+          });
+        }
       });
     }
 
