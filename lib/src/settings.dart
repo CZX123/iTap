@@ -83,6 +83,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                 children: <Widget>[
                   IconButton(
                     icon: Icon(Icons.info),
+                    tooltip: 'About iTap',
                     onPressed: () {
                       Navigator.pop(context);
                       launchURL(context, 'https://itap.ml/app/about/?v=2.0');
@@ -100,6 +101,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                               key: ValueKey(false),
                             ),
                     ),
+                    tooltip: 'Change Theme',
                     onPressed: () {
                       darkModeNotifier.value = !darkModeNotifier.value;
                     },
