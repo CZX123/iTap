@@ -86,7 +86,7 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                     tooltip: 'About iTap',
                     onPressed: () {
                       Navigator.pop(context);
-                      launchURL(context, 'https://itap.ml/app/about/?v=2.0');
+                      launchURL(context, 'https://itap.ml/app/about/?v=2.1');
                     },
                   ),
                   IconButton(
