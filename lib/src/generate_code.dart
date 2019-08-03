@@ -99,6 +99,11 @@ class _GenerateCodePageState extends State<GenerateCodePage>
         _loading = true;
       });
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     getCode();
   }
 
