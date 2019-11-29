@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import 'widgets/custom_cross_fade.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-// For Android 8 and above, location
-class CheckAndroid8 {
+// Class to check if location permission is requred.
+class RequireLocation {
   final bool value;
-  const CheckAndroid8(this.value);
+  const RequireLocation(this.value);
 }
 
 class NetworkNotifier extends ChangeNotifier {
@@ -106,7 +106,7 @@ class _WifiWidgetState extends State<WifiWidget> {
     _wifiName = networkNotifier?.name ?? _wifiName;
     _connectedToWifi = networkNotifier?.result == ConnectivityResult.wifi;
     if (_connectedToWifi && _wifiName == null) {
-      if (Provider.of<CheckAndroid8>(context).value) {
+      if (Provider.of<RequireLocation>(context).value) {
         print(
             'Error! Cannot get wifi name because location or location permission is not turned on!');
         PermissionHandler()

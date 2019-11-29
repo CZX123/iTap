@@ -26,26 +26,26 @@ void main() {
 
 class Main extends StatelessWidget {
   const Main({Key key}) : super(key: key);
-  static const platform = const MethodChannel('com.irs.itap/androidVersion');
+  static const platform = const MethodChannel('com.irs.itap/requireLocation');
 
-  Future<CheckAndroid8> checkAndroid8() async {
+  Future<RequireLocation> requireLocation() async {
     if (Platform.isAndroid)
       return Future.value(
-        CheckAndroid8(
-          await platform.invokeMethod<bool>('checkAndroid8'),
+        RequireLocation(
+          await platform.invokeMethod<bool>('requireLocation'),
         ),
       );
-    return Future.value(CheckAndroid8(false));
+    return Future.value(RequireLocation(false));
   }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        FutureProvider<CheckAndroid8>.value(
-          initialData: CheckAndroid8(false),
-          value: checkAndroid8(),
-          catchError: (context, error) => CheckAndroid8(false),
+        FutureProvider<RequireLocation>.value(
+          initialData: RequireLocation(false),
+          value: requireLocation(),
+          catchError: (context, error) => RequireLocation(false),
         ),
         ChangeNotifierProvider(
           builder: (context) => InternetAvailabilityNotifier(true),

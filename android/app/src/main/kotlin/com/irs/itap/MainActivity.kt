@@ -11,12 +11,12 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugins.GeneratedPluginRegistrant
 
 class MainActivity: FlutterActivity() {
-  private val CHANNEL = "com.irs.itap/androidVersion"
+  private val CHANNEL = "com.irs.itap/requireLocation"
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     GeneratedPluginRegistrant.registerWith(this)
     MethodChannel(flutterView, CHANNEL).setMethodCallHandler { call, result ->
-      if (call.method == "checkAndroid8") {
+      if (call.method == "requireLocation") {
         result.success(VERSION.SDK_INT >= VERSION_CODES.O)
       } else {
         result.notImplemented()
