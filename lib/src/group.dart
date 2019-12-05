@@ -151,7 +151,8 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
               child: GestureDetector(
                 onTap: () {
                   // Ignore this
-                  launchURL(context, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+                  launchURL(
+                      context, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
                 },
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -19,7 +19,11 @@ import Flutter
         result(FlutterMethodNotImplemented)
         return
       }
-      result(#available(iOS 13, *));
+        if #available(iOS 13, *) {
+            result(true)
+        } else {
+            result(false)
+        }
     })
 
     GeneratedPluginRegistrant.register(with: self)

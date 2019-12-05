@@ -22,12 +22,6 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>Camera is needed to scan QR codes when taking attendance.</string>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>Location is needed when taking attendance.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Location is needed when taking attendance.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -47,7 +41,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-    <key>io.flutter.embedded_views_preview</key>
-    <string>YES</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera is needed to scan QR codes when taking attendance.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>iTap requires your location only to obtain the WiFi network you are connected to.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>iTap requires your location only to obtain the WiFi network you are connected to.</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<string>YES</string>
 </dict>
 </plist>

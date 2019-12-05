@@ -31,6 +31,7 @@ class SettingsDrawer extends StatefulWidget {
 
 class _SettingsDrawerState extends State<SettingsDrawer> {
   bool _showAccountsPage = false;
+  bool _loaded = false;
   String _userKey;
   String _fullName;
   String _username;
@@ -41,20 +42,24 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
     final darkModeNotifier = Provider.of<DarkModeNotifier>(context);
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
 
-    if (userDataNotifier.checkData()) {
-      _showAccountsPage = true;
-      _userKey = userDataNotifier.userKey;
-      _fullName = userDataNotifier.fullName;
-      _username = userDataNotifier.username;
-      _org = userDataNotifier.org;
-    } else {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          setState(() {
-            _showAccountsPage = false;
-          });
-        }
-      });
+    if (!_loaded) {
+      if (userDataNotifier.checkData()) {
+        _showAccountsPage = true;
+        _loaded = true;
+        _userKey = userDataNotifier.userKey;
+        _fullName = userDataNotifier.fullName;
+        _username = userDataNotifier.username;
+        _org = userDataNotifier.org;
+      } else {
+        _loaded = true;
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            setState(() {
+              _showAccountsPage = false;
+            });
+          }
+        });
+      }
     }
 
     return SingleChildScrollView(
@@ -81,14 +86,26 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.info),
-                    tooltip: 'About iTap',
-                    onPressed: () {
-                      Navigator.pop(context);
-                      launchURL(context, 'https://itap.ml/app/about/?v=2.1');
-                    },
-                  ),
+                  _userKey != null
+                      ? IconButton(
+                          icon: _showAccountsPage
+                              ? Icon(Icons.info)
+                              : Icon(Icons.account_circle),
+                          tooltip:
+                              _showAccountsPage ? 'About iTap' : 'My Account',
+                          onPressed: () {
+                            setState(() {
+                              _loaded = true;
+                              if (_showAccountsPage)
+                                _showAccountsPage = false;
+                              else
+                                _showAccountsPage = true;
+                            });
+                          },
+                        )
+                      : SizedBox(
+                          height: 0,
+                        ),
                   IconButton(
                     icon: CustomCrossFade(
                       child: darkModeNotifier.value
@@ -159,8 +176,8 @@ class EmptyPage extends StatelessWidget {
           const SizedBox(
             height: 16,
           ),
-          Text('© 2016 – 2019 iTap'),
-          Text('Version 2.1'),
+          Text('© 2016 – 2020 iTap'),
+          Text('Version 2.1.1'),
         ],
       ),
     );
@@ -233,7 +250,9 @@ class _AccountPageState extends State<AccountPage> {
                   height: 2,
                 ),
                 Text(
-                  widget.username + '@' + widget.org,
+                  widget.username.toLowerCase() +
+                      '@' +
+                      widget.org.toLowerCase(),
                   style: TextStyle(
                     color: Colors.white,
                   ),
@@ -259,7 +278,7 @@ class _AccountPageState extends State<AccountPage> {
               Navigator.pop(context);
               launchURL(
                 context,
-                'https://itap.ml/app/viewattendance/?token=${widget.userKey}',
+                'https://itap.ml/app/viewattendance/?org=${widget.org}&token=${widget.userKey}',
               );
             },
           ),

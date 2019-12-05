@@ -85,6 +85,10 @@ class _WifiWidgetState extends State<WifiWidget> {
         } catch (e) {
           print('Failed to get mac address: $e');
         }
+        if (mac == '00:00:00:00:00:00') {
+          name = null;
+          mac = null;
+        }
         if (name == null) {
           networkNotifier.errorText = 'Location is not turned on';
         } else {
@@ -185,8 +189,10 @@ class _WifiWidgetState extends State<WifiWidget> {
                     Padding(
                       padding: EdgeInsets.only(bottom: 8),
                       child: CustomCrossFade(
-                        key: ValueKey(networkNotifier.errorText),
-                        child: Text(networkNotifier.errorText),
+                        key: ValueKey(networkNotifier.errorText ??
+                            'Error in obtaining WiFi'),
+                        child: Text(networkNotifier.errorText ??
+                            'Error in obtaining WiFi'),
                       ),
                     ),
                 ],

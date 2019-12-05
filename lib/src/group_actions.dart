@@ -51,6 +51,10 @@ class GroupActions extends StatelessWidget {
       print('Failed to get mac address: $e');
       return false;
     }
+    if (mac == '00:00:00:00:00:00') {
+      name = null;
+      mac = null;
+    }
     Provider.of<NetworkNotifier>(context, listen: false)
         .updateNetwork(result, name, mac);
     // The logic here may be confusing, but it works.

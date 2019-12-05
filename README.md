@@ -12,7 +12,7 @@ Take attendance with a TAP!
 
 ### Other features
 - Build change password into the app
-- Remove 'About iTap' webview and hardcode it directly into the app
+- ~~Remove 'About iTap' webview and hardcode it directly into the app~~
 - Remove 'Attendance History' webview and include it directly into the app, through fetch request for json data, and the use of Data Tables
 - If possible, smoothly transition between the different stages (absent, present with check in, present with check out) through smoother animations (icon animations, translations).
 

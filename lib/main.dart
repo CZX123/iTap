@@ -20,8 +20,8 @@ import 'src/widgets/no_internet.dart';
 import 'src/wifi.dart';
 
 void main() {
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(Main());
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 }
 
 class Main extends StatelessWidget {
@@ -29,13 +29,11 @@ class Main extends StatelessWidget {
   static const platform = const MethodChannel('com.irs.itap/requireLocation');
 
   Future<RequireLocation> requireLocation() async {
-    if (Platform.isAndroid)
-      return Future.value(
-        RequireLocation(
-          await platform.invokeMethod<bool>('requireLocation'),
-        ),
-      );
-    return Future.value(RequireLocation(false));
+    return Future.value(
+      RequireLocation(
+        await platform.invokeMethod<bool>('requireLocation'),
+      ),
+    );
   }
 
   @override
@@ -90,7 +88,7 @@ class _HomeState extends State<Home> {
     try {
       final response = await http.post('https://itap.ml/app/index.php', body: {
         'action': 'getNotification',
-        'v': Platform.isAndroid ? 'android2.1' : 'ios2.1'
+        'v': Platform.isAndroid ? 'android2.1.1' : 'ios2.1.1'
       }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final Map<String, dynamic> parsedJson = jsonDecode(response.body);
@@ -154,6 +152,10 @@ class _HomeState extends State<Home> {
         mac = await _connectivity.getWifiBSSID();
       } catch (e) {
         print('Failed to get mac address: $e');
+      }
+      if (mac == '00:00:00:00:00:00') {
+        name = null;
+        mac = null;
       }
       Provider.of<NetworkNotifier>(context, listen: false)
           .updateNetwork(result, name, mac);
