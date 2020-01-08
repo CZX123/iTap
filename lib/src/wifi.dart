@@ -90,7 +90,7 @@ class _WifiWidgetState extends State<WifiWidget> {
           mac = null;
         }
         if (name == null) {
-          networkNotifier.errorText = 'Location is not turned on';
+          networkNotifier.errorText = 'Error in obtaining WiFi';
         } else {
           networkNotifier.updateNetwork(result, name, mac);
         }
