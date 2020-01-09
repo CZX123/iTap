@@ -49,5 +49,9 @@
 	<string>iTap requires your location only to obtain the WiFi network you are connected to.</string>
 	<key>io.flutter.embedded_views_preview</key>
 	<string>YES</string>
+    <key>UIUserInterfaceStyle</key>
+    <string>Light</string>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <true/>
 </dict>
 </plist>

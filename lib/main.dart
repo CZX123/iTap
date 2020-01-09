@@ -22,6 +22,9 @@ import 'src/wifi.dart';
 void main() {
   runApp(Main());
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(statusBarBrightness: Brightness.light)
+);
 }
 
 class Main extends StatelessWidget {
