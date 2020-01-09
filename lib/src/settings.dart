@@ -88,9 +88,17 @@ class _SettingsDrawerState extends State<SettingsDrawer> {
                 children: <Widget>[
                   _userKey != null
                       ? IconButton(
-                          icon: _showAccountsPage
-                              ? Icon(Icons.info)
-                              : Icon(Icons.account_circle),
+                          icon: CustomCrossFade(
+                            child: _showAccountsPage
+                                ? Icon(
+                                    Icons.info,
+                                    key: ValueKey(true),
+                                  )
+                                : Icon(
+                                    Icons.account_circle,
+                                    key: ValueKey(false),
+                                  ),
+                          ),
                           tooltip:
                               _showAccountsPage ? 'About iTap' : 'My Account',
                           onPressed: () {

@@ -20,7 +20,7 @@ PODS:
 DEPENDENCIES:
   - barcode_scan (from `.symlinks/plugins/barcode_scan/ios`)
   - connectivity (from `.symlinks/plugins/connectivity/ios`)
-  - Flutter (from `.symlinks/flutter/ios-release`)
+  - Flutter (from `Flutter`)
   - flutter_custom_tabs (from `.symlinks/plugins/flutter_custom_tabs/ios`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
@@ -37,7 +37,7 @@ EXTERNAL SOURCES:
   connectivity:
     :path: ".symlinks/plugins/connectivity/ios"
   Flutter:
-    :path: ".symlinks/flutter/ios-release"
+    :path: Flutter
   flutter_custom_tabs:
     :path: ".symlinks/plugins/flutter_custom_tabs/ios"
   permission_handler:
@@ -58,6 +58,6 @@ SPEC CHECKSUMS:
   shared_preferences: 1feebfa37bb57264736e16865e7ffae7fc99b523
   url_launcher: 0067ddb8f10d36786672aa0722a21717dba3a298
 
-PODFILE CHECKSUM: b6a0a141693093b304368d08511b46cf3d1d0ac5
+PODFILE CHECKSUM: 1b66dae606f75376c5f2135a8290850eeb09ae83
 
 COCOAPODS: 1.8.4
