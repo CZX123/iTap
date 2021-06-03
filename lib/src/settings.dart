@@ -286,7 +286,7 @@ class _AccountPageState extends State<AccountPage> {
               Navigator.pop(context);
               launchURL(
                 context,
-                'https://itap.ml/app/viewattendance/?org=${widget.org}&token=${widget.userKey}',
+                'https://itap.luweiqi.com/app/viewattendance/?org=${widget.org}&token=${widget.userKey}',
               );
             },
           ),

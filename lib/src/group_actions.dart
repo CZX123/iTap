@@ -116,7 +116,7 @@ class GroupActions extends StatelessWidget {
       }
       try {
         final response =
-            await http.post('https://itap.ml/app/index.php', body: {
+            await http.post('https://itap.luweiqi.com/app/index.php', body: {
           'userkey': userDataNotifier.userKey,
           'action': 'takeAttendance',
           'org': userDataNotifier.org,

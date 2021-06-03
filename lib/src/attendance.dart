@@ -22,7 +22,8 @@ class _AttendancePageState extends State<AttendancePage>
     final userDataNotifier = Provider.of<UserDataNotifier>(context);
     if (userDataNotifier?.userKey == null) return;
     try {
-      final response = await http.post('https://itap.ml/app/index.php', body: {
+      final response =
+          await http.post('https://itap.luweiqi.com/app/index.php', body: {
         'userkey': userDataNotifier.userKey,
         'action': 'getGroups',
         'org': userDataNotifier.org,

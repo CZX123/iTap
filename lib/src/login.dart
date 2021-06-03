@@ -123,7 +123,7 @@ class _LoginFormState extends State<LoginForm> {
       });
       try {
         final response =
-            await http.post('https://itap.ml/app/index.php', body: {
+            await http.post('https://itap.luweiqi.com/app/index.php', body: {
           'token': 'rQQYP51jI87DnteO',
           'action': 'login',
           'org': _org,
@@ -131,9 +131,10 @@ class _LoginFormState extends State<LoginForm> {
           'password': _password,
         }).timeout(const Duration(seconds: 10));
         _timer.cancel();
-        if (_loading) setState(() {
-          _loading = false;
-        });
+        if (_loading)
+          setState(() {
+            _loading = false;
+          });
         if (response.statusCode == 200) {
           Provider.of<InternetAvailabilityNotifier>(context, listen: false)
               .value = true;
@@ -339,16 +340,17 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
       });
       try {
         final response =
-            await http.post('https://itap.ml/app/index.php', body: {
+            await http.post('https://itap.luweiqi.com/app/index.php', body: {
           'token': 'rQQYP51jI87DnteO',
           'action': 'forgotPassword',
           'org': _org,
           'username': _username,
         }).timeout(const Duration(seconds: 10));
         _timer.cancel();
-        if (_loading) setState(() {
-          _loading = false;
-        });
+        if (_loading)
+          setState(() {
+            _loading = false;
+          });
         if (response.statusCode == 200) {
           Provider.of<InternetAvailabilityNotifier>(context, listen: false)
               .value = true;

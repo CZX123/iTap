@@ -57,7 +57,8 @@ class _GroupPageState extends State<GroupPage> with WidgetsBindingObserver {
       });
     }
     try {
-      final response = await http.post('https://itap.ml/app/index.php', body: {
+      final response =
+          await http.post('https://itap.luweiqi.com/app/index.php', body: {
         'userkey': userDataNotifier.userKey,
         'action': 'getGroupDetails',
         'org': userDataNotifier.org,
@@ -285,7 +286,8 @@ class GroupTimings extends StatelessWidget {
         isCheckOut && groupDetails.remarksCheckout == remarks) return;
     try {
       final userDataNotifier = Provider.of<UserDataNotifier>(context);
-      final response = await http.post('https://itap.ml/app/index.php', body: {
+      final response =
+          await http.post('https://itap.luweiqi.com/app/index.php', body: {
         'userkey': userDataNotifier.userKey,
         'action': 'addRemarks',
         'org': userDataNotifier.org,

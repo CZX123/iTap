@@ -23,8 +23,7 @@ void main() {
   runApp(Main());
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(statusBarBrightness: Brightness.light)
-);
+      SystemUiOverlayStyle(statusBarBrightness: Brightness.light));
 }
 
 class Main extends StatelessWidget {
@@ -89,7 +88,8 @@ class _HomeState extends State<Home> {
 
   void getNotification() async {
     try {
-      final response = await http.post('https://itap.ml/app/index.php', body: {
+      final response =
+          await http.post('https://itap.luweiqi.com/app/index.php', body: {
         'action': 'getNotification',
         'v': Platform.isAndroid ? 'android2.1.1' : 'ios2.1.1'
       }).timeout(const Duration(seconds: 10));

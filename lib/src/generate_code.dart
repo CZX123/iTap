@@ -30,7 +30,8 @@ class _GenerateCodePageState extends State<GenerateCodePage>
   void getCode() async {
     try {
       final userDataNotifier = Provider.of<UserDataNotifier>(context);
-      final response = await http.post('https://itap.ml/app/index.php', body: {
+      final response =
+          await http.post('https://itap.luweiqi.com/app/index.php', body: {
         'userkey': userDataNotifier.userKey,
         'action': 'getCode',
         'org': userDataNotifier.org,
